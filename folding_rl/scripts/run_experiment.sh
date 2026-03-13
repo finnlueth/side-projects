@@ -8,8 +8,8 @@ echo "=== Run: ${RUN_ID} ==="
 echo "=== Artifacts: ${RUN_DIR} ==="
 
 uv run python scripts/train.py \
-    --total-timesteps 5000 \
-    --num-envs 2 \
+    --total-timesteps 50000 \
+    --num-envs 4 \
     --num-steps 256 \
     --no-wandb \
     --learning-rate 3e-4 \
