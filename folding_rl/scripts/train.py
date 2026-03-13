@@ -50,7 +50,8 @@ def main():
     parser.add_argument("--no-wandb", action="store_true")
     parser.add_argument("--fast-dev-run", action="store_true",
                         help="Run only 1 update for debugging")
-    parser.add_argument("--checkpoint-dir", type=str, default="checkpoints")
+    parser.add_argument("--run-dir", type=str, default="tmp/runs/default",
+                        help="Root directory for all run artifacts (logs, checkpoints)")
     args = parser.parse_args()
 
     # Config
@@ -76,10 +77,13 @@ def main():
         env_factory=make_env(cfg),
     )
 
+    run_dir = args.run_dir
+    os.makedirs(run_dir, exist_ok=True)
+
     # Callbacks
     callbacks = [
         ModelCheckpoint(
-            dirpath=args.checkpoint_dir,
+            dirpath=os.path.join(run_dir, "checkpoints"),
             filename="ppo-{step}-{episode/mean_lddt:.3f}",
             save_top_k=3,
             monitor="episode/mean_lddt",
@@ -109,6 +113,7 @@ def main():
         fast_dev_run=args.fast_dev_run,
         accelerator="auto",
         devices=1,
+        default_root_dir=run_dir,
     )
 
     trainer.fit(model, datamodule=dm)

@@ -129,10 +129,8 @@ class ProteinFoldingEnv(gym.Env):
         # Propose new positions
         proposed = self._grid.positions + displacements
 
-        # Reject out-of-bounds moves per residue (keep old position)
-        oob = (proposed < 0) | (proposed > self._grid.max_coord)
-        oob_mask = oob.any(axis=-1)  # (N,) True if any axis is OOB
-        proposed[oob_mask] = self._grid.positions[oob_mask]
+        # Clamp out-of-bounds moves to boundary (allows sliding along walls)
+        proposed = np.clip(proposed, 0, self._grid.max_coord)
 
         # Reject moves that cause collisions (two residues at same voxel).
         # Process sequentially: each residue either moves to proposed or stays.

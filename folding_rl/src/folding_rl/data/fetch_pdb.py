@@ -5,7 +5,7 @@ from Bio import PDB
 from Bio.Data.IUPACData import protein_letters_3to1
 
 
-_DATA_DIR = Path(__file__).parent.parent.parent.parent / "data"
+_DATA_DIR = Path(__file__).parent.parent.parent.parent / "tmp" / "data"
 
 
 def load_ca_coords(pdb_id: str = "1L2Y") -> tuple[np.ndarray, list[str]]:
