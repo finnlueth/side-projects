@@ -153,40 +153,121 @@
   }
 
   /**
-   * Scroll the chat to a message and flash it.
-   *
-   * @param {object} node tree node to look for
-   * @param {{onPath: boolean, position: number}} hint whether the message is on the branch
-   *   the chat is showing, and roughly how far down that branch it sits (0–1)
-   * @returns {Promise<'found'|'off-path'|'not-found'>}
+   * Locate Claude's variant switcher on a rendered message: a "n / m" readout flanked by
+   * exactly two controls. The shape is matched rather than any class or test id, and the
+   * count has to agree with the tree, so a wrong control cannot be clicked by accident.
    */
-  async function revealNode(node, { onPath, position } = {}) {
-    let el = findElement(node);
-    if (el) {
-      flash(el);
-      return 'found';
+  function findVariantSwitcher(el, expectedCount) {
+    const row = el.closest('[data-perf-row]') || el.parentElement || el;
+    for (const candidate of row.querySelectorAll('*')) {
+      if (candidate.children.length) continue;
+      const match = /^(\d+)\s*\/\s*(\d+)$/.exec((candidate.textContent || '').trim());
+      if (!match || Number(match[2]) !== expectedCount) continue;
+
+      const group = candidate.closest('*:has(> button, > [role="button"])') || candidate.parentElement;
+      const buttons = group ? Array.from(group.querySelectorAll('button, [role="button"]')) : [];
+      if (buttons.length !== 2) continue;
+      return { index: Number(match[1]) - 1, prev: buttons[0], next: buttons[1] };
     }
-    // Off the visible branch, no amount of scrolling will render it.
-    if (!onPath) return 'off-path';
+    return null;
+  }
+
+  /**
+   * The shallowest fork on the way to `node` where the chat is showing a different variant,
+   * together with the switcher on the variant that is currently rendered.
+   */
+  function findDivergence(node) {
+    let found = null;
+    for (let n = node; n && n.parent; n = n.parent) {
+      const siblings = n.parent.children;
+      if (siblings.length < 2) continue;
+      const shown = siblings.find((sibling) => findElement(sibling));
+      if (!shown || shown === n) continue; // this fork is already on the right variant
+      const switcher = findVariantSwitcher(findElement(shown), siblings.length);
+      if (!switcher) continue;
+      found = { wanted: n, siblings, switcher }; // keep going: prefer the shallowest fork
+    }
+    return found;
+  }
+
+  /**
+   * Walk the chat onto the branch a message lives on by clicking the same "‹ 2/3 ›"
+   * control a person would. Changes nothing and returns false whenever the control cannot
+   * be found or does not behave as expected.
+   *
+   * @returns {Promise<boolean>} whether the displayed branch was changed
+   */
+  async function switchToBranch(node) {
+    let switched = false;
+    for (let hop = 0; hop < 4; hop++) {
+      const divergence = findDivergence(node);
+      if (!divergence) break;
+
+      const { wanted, siblings, switcher } = divergence;
+      const forward = wanted.siblingIndex > switcher.index;
+      const steps = Math.abs(wanted.siblingIndex - switcher.index);
+
+      for (let i = 0; i < steps && i < siblings.length; i++) {
+        // Clicking re-renders the row, so the controls have to be found again each time.
+        const rendered = siblings.map((sibling) => findElement(sibling)).find(Boolean);
+        const control = rendered && findVariantSwitcher(rendered, siblings.length);
+        if (!control) return switched;
+        (forward ? control.next : control.prev).click();
+        switched = true;
+        await settle();
+      }
+    }
+    return switched;
+  }
+
+  /** Scroll the chat until Claude has rendered `node`, or give up. */
+  async function hunt(node, position) {
+    let el = findElement(node);
+    if (el) return el;
 
     const scroller = findScroller();
-    if (!scroller) return 'not-found';
+    if (!scroller) return null;
 
-    // On the visible branch but not in the DOM: Claude has not rendered that far yet, so
-    // walk the scroller until it does.
     const previous = scroller.scrollTop;
     const travel = scroller.scrollHeight - scroller.clientHeight;
     for (const fraction of sweep(position)) {
       scroller.scrollTop = travel * fraction;
       await settle();
       el = findElement(node);
-      if (el) {
-        flash(el);
-        return 'found';
-      }
+      if (el) return el;
     }
     scroller.scrollTop = previous;
-    return 'not-found';
+    return null;
+  }
+
+  /**
+   * Scroll the chat to a message and flash it.
+   *
+   * Claude renders lazily, and the branch it is showing is not always the branch the API
+   * last recorded, so this searches before it draws any conclusion — and if the message
+   * really is on another branch, it asks Claude to show that branch first.
+   *
+   * @param {object} node tree node to look for
+   * @param {{onPath: boolean, position: number}} hint what the API believes about the
+   *   message, and roughly how far down its branch it sits (0–1)
+   * @returns {Promise<'found'|'switched'|'off-path'|'not-found'>}
+   */
+  async function revealNode(node, { onPath, position } = {}) {
+    let el = await hunt(node, position);
+    if (el) {
+      flash(el);
+      return 'found';
+    }
+
+    if (await switchToBranch(node)) {
+      el = await hunt(node, position);
+      if (el) {
+        flash(el);
+        return 'switched';
+      }
+    }
+
+    return onPath ? 'not-found' : 'off-path';
   }
 
   /* ----------------------------------------------------------- reading position -- */

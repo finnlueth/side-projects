@@ -16,8 +16,9 @@ through that tree, with a small `‹ 2/3 ›` switcher. This pane shows the whol
   alternatives.
 - **Message details** — click a node for the full text, timestamp, extended thinking, tools
   used and attachment count, plus `‹ 2/3 ›` navigation between the variants at that fork.
-- **Find in chat** — jumps to the top of the message in the live conversation and flashes it,
-  scrolling to hunt it down if Claude has not rendered that far yet.
+- **Find in chat** — jumps to the top of any message in the live conversation and flashes it:
+  scrolling to hunt it down if Claude has not rendered that far yet, and switching the chat onto
+  the right branch first if the message lives on a different one.
 - **Follows where you are** — the message you are currently reading is outlined in the tree, so
   you always know your place. Every message holds that outline for a minimum run of scrolling, so
   short prompts between long answers do not flicker past. The selected message's accent outline
@@ -99,7 +100,9 @@ claude.ai's own styles or be affected by them.
 
 Custom properties do cross that shadow boundary, though, which is how the pane reuses Claude's
 design system rather than reimplementing it: colours come from the page's `--bg-*`, `--text-*`,
-`--border-*` and `--accent-brand` scales, metrics from `--cds-radius`, `--cds-h-control` and
+`--border-*` and `--accent-brand` scales — composited the way Claude composites them, which for
+`--border-300` means with an alpha, since the raw triplet is a near-black or near-white meant to
+be used at around 20% — metrics from `--cds-radius`, `--cds-h-control` and
 `--cds-pad-*`, motion from `--cds-dur-*` and `--cds-ease-*`, and type from `--font-sans`. Icons
 are glyphs from the Anthropicons font the page already loads, their codepoints read off Claude's
 own buttons by accessible name at runtime so they survive the font being renumbered. Every one
@@ -117,9 +120,11 @@ would make fixed elements scroll away with the page. Closing the pane removes al
   pane falls back through several older request forms, and worst case shows only the visible
   path instead of the full tree — if you see one branch where the chat offers `‹ 2/3 ›`
   switchers, that fallback is what happened.
-- **Read-only.** It never writes to your conversations, so it cannot switch the chat to a
-  different branch. *Find in chat* can reach any message on the branch the chat is showing, but
-  not one on another branch — use Claude's own `‹ ›` switchers for that.
+- **It never writes to your conversations** — no messages, edits or deletions. The one thing it
+  does drive is Claude's own `‹ 2/3 ›` branch switcher, when *find in chat* needs the chat to be
+  showing a different branch. That control is matched by shape — a `n / m` readout flanked by
+  exactly two buttons, with `m` agreeing with the tree — so it cannot click something else by
+  mistake, and if no such control is found nothing is clicked and the pane says so.
 - **The header button is placed against markup, not an API.** It anchors on Claude's own
   `wiggle-controls-actions-*` test ids and is re-inserted whenever Claude re-renders the header.
   If those disappear it falls back to locating the Share control by accessible name, and failing

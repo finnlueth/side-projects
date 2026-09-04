@@ -474,7 +474,8 @@
       });
       this.toast({
         found: 'Scrolled to the message',
-        'off-path': 'That message is on a different branch than the chat is showing',
+        switched: 'Switched the chat to that branch',
+        'off-path': "That branch isn't shown in the chat — use Claude's ‹ › switcher to reach it",
         'not-found': 'Could not find that message in the page',
       }[outcome]);
     }
@@ -785,7 +786,7 @@
 
       detail.innerHTML = `
         <div class="ct-detail-head">
-          <span class="ct-detail-who">${node.sender === 'human' ? 'You' : 'Claude'}</span>
+          <span class="ct-detail-who" data-sender="${node.sender}">${node.sender === 'human' ? 'You' : 'Claude'}</span>
           <span class="ct-detail-time">${esc(formatTime(node.createdAt))}</span>
           ${nav}
           <div class="ct-detail-actions">

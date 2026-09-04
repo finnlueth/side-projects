@@ -13,10 +13,13 @@
 
   /* --- claude.ai tokens, light fallbacks ------------------------------------------- */
   --ct-accent: hsl(var(--accent-brand, 15 63.1% 59.6%));
+  --ct-assistant: #6b7f8f;
   --ct-bg: hsl(var(--bg-000, 0 0% 100%));
   --ct-canvas: hsl(var(--bg-100, 48 33.3% 97.1%));
   --ct-surface: hsl(var(--bg-000, 0 0% 100%));
-  --ct-border: hsl(var(--border-300, 51 16.5% 84.5%));
+  /* claude.ai always composites this token with an alpha; at full opacity it paints a
+     solid light line on dark, which reads as if every card were selected. */
+  --ct-border: hsl(var(--border-300, 30 3.3% 11.8%) / 0.22);
   --ct-text: hsl(var(--text-100, 60 2.6% 7.6%));
   --ct-text-2: hsl(var(--text-300, 60 2.5% 23.3%));
   --ct-text-3: hsl(var(--text-400, 51 3.1% 43.7%));
@@ -57,10 +60,11 @@
 }
 
 :host([data-theme="dark"]) {
+  --ct-assistant: #8ba6ba;
   --ct-bg: hsl(var(--bg-000, 60 2.1% 18.4%));
   --ct-canvas: hsl(var(--bg-100, 60 2.7% 14.5%));
   --ct-surface: hsl(var(--bg-000, 60 2.1% 18.4%));
-  --ct-border: hsl(var(--border-300, 30 3.3% 11.8%));
+  --ct-border: hsl(var(--border-300, 51 16.5% 84.5%) / 0.22);
   --ct-text: hsl(var(--text-100, 48 33.3% 97.1%));
   --ct-text-2: hsl(var(--text-300, 50 9% 73.7%));
   --ct-text-3: hsl(var(--text-400, 48 4.8% 59.2%));
@@ -326,7 +330,6 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   min-height: 0;
   overflow: hidden;
   background: var(--ct-canvas);
-  border-top: 1px solid var(--ct-border);
   cursor: grab;
   touch-action: none;
 }
@@ -386,7 +389,12 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   font-size: 10.5px;
   color: var(--ct-text-3);
 }
-.ct-node-who { font-weight: 500; }
+/* Claude's system has no semantic colour for "the assistant", so the slate is ours;
+   "you" reuses the brand accent. */
+.ct-node-who { font-weight: 500; color: var(--ct-assistant); }
+.ct-node[data-sender="human"] .ct-node-who { color: var(--ct-accent); }
+.ct-detail-who { color: var(--ct-assistant); }
+.ct-detail-who[data-sender="human"] { color: var(--ct-accent); }
 .ct-node-variant {
   margin-left: auto;
   padding: 0 5px;
@@ -492,7 +500,6 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   display: flex;
   flex-direction: column;
   max-height: 46%;
-  border-top: 1px solid var(--ct-border);
   background: var(--ct-bg);
 }
 .ct-detail[hidden] { display: none; }
@@ -503,7 +510,7 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   padding: 6px 8px 6px 14px;
   flex: none;
 }
-.ct-detail-who { font-size: 12px; font-weight: 500; color: var(--ct-text-2); }
+.ct-detail-who { font-size: 12px; font-weight: 500; }
 .ct-detail-time { font-size: 11.5px; color: var(--ct-text-3); }
 .ct-detail-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; }
 
