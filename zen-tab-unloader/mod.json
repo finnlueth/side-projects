@@ -1,0 +1,7 @@
+{
+  "name": "zen-tab-unloader",
+  "displayName": "Tab Unloader",
+  "version": "1.0.0",
+  "description": "Keeps only N tabs loaded in memory at a time using an LRU queue. When the limit is exceeded, the least-recently-used tab is discarded from memory while remaining visible in the tab bar.",
+  "author": "Finn Lueth"
+}

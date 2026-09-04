@@ -1,0 +1,15 @@
+[
+  {
+    "property": "mod.zen-tab-unloader.max_loaded_tabs",
+    "label": "Maximum loaded tabs",
+    "type": "string",
+    "defaultValue": "5",
+    "placeholder": "5"
+  },
+  {
+    "property": "mod.zen-tab-unloader.show_indicator",
+    "label": "Show visual indicator on unloaded tabs",
+    "type": "checkbox",
+    "defaultValue": true
+  }
+]

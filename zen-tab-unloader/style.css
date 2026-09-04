@@ -1,0 +1,29 @@
+/*
+ * Dim unloaded (pending) tabs.
+ * Firefox/Zen sets pending="true" on discarded and lazy-restore tabs.
+ */
+.tabbrowser-tab[pending] {
+  opacity: 0.6;
+}
+
+@media (-moz-bool-pref: "mod.zen-tab-unloader.show_indicator") {
+  /* Small dot badge on the tab favicon corner */
+  .tabbrowser-tab[pending] .tab-icon-stack::after {
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--zen-primary-color, #888);
+    border: 1px solid var(--toolbar-bgcolor, #fff);
+    pointer-events: none;
+  }
+
+  /* Italic label to hint the tab is not loaded */
+  .tabbrowser-tab[pending] .tab-label {
+    font-style: italic;
+  }
+}
