@@ -1,0 +1,181 @@
+<!doctype html><meta charset="utf-8"><title>chat check</title>
+<style>
+  :root{--bg-000:0 0% 100%;--bg-100:48 33.3% 97.1%;--border-300:30 3.3% 11.8%;
+    --text-100:60 2.6% 7.6%;--text-300:60 2.5% 23.3%;--text-400:51 3.1% 43.7%;
+    --accent-brand:15 63.1% 59.6%;--cds-radius:8px;--cds-radius--lg:12px;
+    --cds-h-control:32px;--cds-icon:16px;--font-sans:"page-sans",system-ui;}
+  html.dark{--bg-000:60 2.1% 18.4%;--bg-100:60 2.7% 14.5%;--border-300:51 16.5% 84.5%;
+    --text-100:48 33.3% 97.1%;--text-300:50 9% 73.7%;--text-400:48 4.8% 59.2%;}
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{background:hsl(var(--bg-100));color:hsl(var(--text-100));font-family:var(--font-sans);overflow:hidden}
+  #app{display:flex;height:100vh} nav{width:240px;background:hsl(var(--bg-000));flex:none}
+  main{flex:1;display:flex;flex-direction:column;min-width:0}
+  header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
+  .grp{display:flex;align-items:center;gap:8px}
+  .grp button{height:36px;border:0;border-radius:10px;background:hsl(var(--bg-000));
+    color:hsl(var(--text-100));font:inherit;cursor:pointer;padding:0 14px}
+  .grp button[data-cds-icon-only]{width:36px;padding:0;background:transparent}
+  .messages{flex:1;overflow-y:auto;position:relative}
+  .row{position:absolute;left:0;right:0;padding:18px 40px;line-height:1.6}
+  .switch{display:flex;align-items:center;gap:4px;margin-top:8px;opacity:.7}
+  .switch button{border:0;background:transparent;color:inherit;cursor:pointer;font:inherit}
+  .bar{display:flex;align-items:center;gap:6px;margin-top:8px;opacity:.6;font-size:12px}
+  .bar button{border:0;background:transparent;color:inherit;cursor:pointer;font:inherit}
+  .composer{padding:16px}
+</style>
+<div id="app"><nav></nav><main>
+  <header><div>Tidy tree layouts</div><div id="grp" class="grp"></div></header>
+  <div class="messages" id="scroller"><div data-testid="transcript-sizer" id="spacer"></div></div>
+  <div class="composer">Write a message…</div></main></div>
+<div id="findbar" hidden style="position:fixed;top:70px;right:40px;z-index:999;
+     background:#2a2a28;padding:10px;border-radius:10px"><input id="findinput" placeholder="Find"></div>
+<div id="dlg" role="dialog" aria-modal="true" hidden
+     style="position:fixed;inset:22% 28%;z-index:9999;background:#2a2a28;color:#eee;
+            border-radius:12px;padding:24px;font-size:18px">Claude search</div>
+<script>
+  const P=new URLSearchParams(location.search);
+  if(P.get('theme')==='dark') document.documentElement.classList.add('dark');
+  document.getElementById('grp').innerHTML=
+    '<button data-testid="wiggle-controls-actions-toggle" data-cds-icon-only aria-label="Files">D</button>'
+    +'<span tabindex="-1"><button data-testid="wiggle-controls-actions-share">Share</button></span>';
+  document.getElementById('grp').dataset.testid='wiggle-controls-actions-group';
+  if(P.get('iconfont')==='1') document.fonts.add(new FontFace('Anthropicons-Variable','url(/none.woff2)'));
+  const closeBtn=document.createElement('button');
+  closeBtn.setAttribute('aria-label','Close');
+  closeBtn.innerHTML='<span data-cds="Icon">'+String.fromCharCode(0xe0aa)+'</span>';
+  closeBtn.style.cssText='position:absolute;left:-9999px';
+  document.body.appendChild(closeBtn);
+  const store={};window.browser={runtime:{getURL:p=>new URL('/'+p,location.origin).href,
+    sendMessage:async()=>null,onMessage:{addListener(){}}},
+    storage:{local:{
+      get:async k=>{const raw=sessionStorage.getItem('ct-'+k);return {[k]:raw?JSON.parse(raw):undefined};},
+      set:async o=>{for(const [k,v] of Object.entries(o)) sessionStorage.setItem('ct-'+k,JSON.stringify(v));},
+      remove:async k=>sessionStorage.removeItem('ct-'+k)}}};
+  document.cookie='lastActiveOrg=00000000-0000-4000-8000-00000000abcd;path=/';
+  const realFetch=window.fetch.bind(window);
+  const json=(o,status)=>new Response(JSON.stringify(o),{status:status||200,
+    headers:{'content-type':'application/json'}});
+  // Stand in for claude.ai's API so api.js runs for real: org lookup, query fallback,
+  // the branch PUT, and reads that can lag behind the write.
+  window.fetch=async(url,init)=>{
+    const u=String(url), method=(init&&init.method)||'GET';
+    const H=window.__api;
+    if(u.includes('/current_leaf_message_uuid')&&method==='PUT'){
+      const log=JSON.parse(sessionStorage.getItem('ct-puts')||'[]');
+      log.push({url:u,method,body:init.body});
+      sessionStorage.setItem('ct-puts',JSON.stringify(log));
+      H.pendingLeaf=JSON.parse(init.body).current_leaf_message_uuid;
+      sessionStorage.setItem('ct-reads-at-put',String(H.reads));
+      return json({current_leaf_message_uuid:H.pendingLeaf});
+    }
+    if(u.includes('/api/organizations')&&u.includes('/chat_conversations/')){
+      return H.readConversation();
+    }
+    if(u.endsWith('/api/organizations')) return json([{uuid:'00000000-0000-4000-8000-00000000abcd'}]);
+    return realFetch(url,init);
+  };
+</script>
+<script src="/src/api.js"></script><script src="/src/model.js"></script>
+<script src="/src/chat.js"></script><script src="/src/panel.js"></script>
+<script src="/src/content.js"></script>
+<script>
+const R='00000000-0000-4000-8000-000000000000';let c=0;
+const id=n=>`${String(n).padStart(8,'0')}-0000-4000-8000-000000000000`;
+const M=(n,p,s,t)=>({uuid:id(n),parent_message_uuid:p===null?R:id(p),sender:s,
+  content:[{type:'text',text:t}],created_at:new Date(Date.UTC(2026,8,1,10,0,c++)).toISOString(),
+  index:0,attachments:[],files:[]});
+const CONVO={name:'Tidy tree layouts',current_leaf_message_uuid:id(25),chat_messages:[
+  M(1,null,'human','Can you explain how **tidy tree layouts** work? I keep getting overlapping subtrees whenever a branch runs deeper than its neighbour.'),
+  M(2,1,'assistant','## Where overlap comes from\n\nOverlap comes from positioning parents independently of their subtree extents, so a deep subtree reaches sideways into whatever happens to sit next to it.'),
+  M(3,2,'human','Show me the recursive version.'),
+  M(4,3,'assistant','**Walk depth-first**, give each leaf the next slot on a shared cursor, and centre every parent on the span of its children. A node always lands inside its own subtree.'),
+  M(5,3,'assistant','The classic reference is *Reingold-Tilford* (1981), which does the same thing but also tracks the left and right contours of each subtree.'),
+  M(6,5,'human','What does contour tracking buy me?'),
+  M(7,6,'assistant','Tighter packing: subtrees interleave instead of each reserving a full bounding box, which matters once the tree is wide.'),
+  M(8,4,'human','Does the simple version ever overlap?'),
+  M(9,8,'assistant','No. Every node lands inside its own subtree leaf span, and adjacent spans are separated by the leaf gap, so fixed-width boxes cannot collide.'),
+  M(20,9,'human','ok thanks'),
+  M(21,20,'assistant','Any time.'),
+  M(22,21,'human','ok'),
+  M(23,22,'assistant','Any time.'),
+  M(24,23,'human','ok'),
+  M(25,24,'assistant','With a fair die p(omega) = 1/6 for every outcome.')]};
+const SC=P.get('scenario')||'ok';
+window.__api={
+  reads:0, pendingLeaf:null, staleReads:Number(P.get('lag')||0),
+  readConversation(){
+    this.reads++;
+    if(SC==='error') return new Response('{}',{status:403});
+    const copy=JSON.parse(JSON.stringify(CONVO));
+    if(P.get('flat')==='1') copy.chat_messages=copy.chat_messages.filter(
+      m=>![5,6,7].includes(parseInt(m.uuid.slice(0,8),10)));
+    if(this.pendingLeaf){
+      if(this.staleReads>0) this.staleReads--;            // still serving the old leaf
+      else { copy.current_leaf_message_uuid=this.pendingLeaf;
+             sessionStorage.setItem('ct-settled','1'); }
+    }
+    return new Response(JSON.stringify(copy),{status:200,
+      headers:{'content-type':'application/json'}});
+  }};
+const BRANCH_A=[1,2,3,4,8,9,20,21,22,23,24,25],BRANCH_B=[1,2,3,5,6,7];let variant=0;let PATH=BRANCH_A.slice();
+const byId=n=>CONVO.chat_messages.find(m=>m.uuid===id(n));
+const strip=t=>t.replace(/\*\*|\*|^##\s+/gm,'').replace(/\n+/g,' ');
+const H=n=>byId(n).sender==='human'?90:620;
+const tops=()=>{let y=0;return PATH.map(n=>{const t=y;y+=H(n);return t;});};
+const scroller=document.getElementById('scroller'),spacer=document.getElementById('spacer');
+const live=new Map();
+function setVariant(v){variant=Math.max(0,Math.min(1,v));PATH=(variant?BRANCH_B:BRANCH_A).slice();
+  CONVO.current_leaf_message_uuid=id(PATH[PATH.length-1]);
+  for(const [i,el] of live){el.remove();}live.clear();render();}
+function render(){
+  const T=tops();spacer.style.height=(T[T.length-1]+H(PATH[PATH.length-1])+scroller.clientHeight*0.7)+'px';
+  const top=scroller.scrollTop,bottom=top+scroller.clientHeight,want=new Set();
+  PATH.forEach((n,i)=>{if(T[i]+H(n)>=top-150&&T[i]<=bottom+150)want.add(i);});
+  for(const [i,el] of live){if(!want.has(i)){el.remove();live.delete(i);}}
+  for(const i of want){
+    if(live.has(i))continue;
+    const n=PATH[i],m=byId(n),el=document.createElement('div');
+    el.className='row';el.dataset.testid='transcript-row';el.dataset.perfRow=m.sender;
+    el.dataset.perfRowFromTail=String(Math.min(10, PATH.length-1-i));
+    el.style.top=T[i]+'px';el.style.height=(H(n)-8)+'px';
+    const body=document.createElement('div');
+    if(m.sender==='human') body.dataset.testid='user-message'; else body.className='font-claude-response';
+    if(n===25){
+      body.innerHTML='With a fair die p(omega) = <span role="math"><span><span>1/6</span></span></span> for every outcome.';
+    } else body.textContent=strip(m.content[0].text);
+    el.appendChild(body);
+    const bar=document.createElement('div');bar.className='bar';
+    bar.innerHTML='<button data-testid="action-bar-copy" aria-label="Copy">Copy</button>'
+      +'<button data-testid="action-bar-retry" aria-label="Retry">Retry</button>';
+    bar.querySelectorAll('button').forEach(btn=>btn.addEventListener('pointerdown',()=>{
+      window.__pressed=(window.__pressed||[]).concat(btn.dataset.testid); }));
+    el.appendChild(bar);
+    if((n===4||n===5) && P.get('switcher')!=='none'){
+      const mount=()=>{
+        if(bar.querySelector('.switch')) return;
+        const sw=document.createElement('div');sw.className='switch';
+        sw.innerHTML='<button data-testid="action-bar-previous-version" aria-label="Previous version"'
+          +(variant===0?' disabled':'')+'>&lsaquo;</button>'
+          +'<span>'+(variant+1)+' / 2</span>'
+          +'<button data-testid="action-bar-next-version" aria-label="Next version"'
+          +(variant===1?' disabled':'')+'>&rsaquo;</button>';
+        // Claude's controls key off the pointer sequence; a bare .click() must not work
+        const bs=sw.querySelectorAll('button');
+        bs[0].addEventListener('pointerdown',()=>{ if(!bs[0].disabled) setVariant(variant-1); });
+        bs[1].addEventListener('pointerdown',()=>{ if(!bs[1].disabled) setVariant(variant+1); });
+        bar.appendChild(sw);
+      };
+      if(P.get('hoverswitch')==='1') el.addEventListener('mouseover',mount); else mount();
+    }
+    spacer.appendChild(el);live.set(i,el);}
+}
+scroller.addEventListener('scroll',render);render();
+window.__harness={render,scroller,tops,setVariant,path(){return PATH.slice();},
+  dialog(open){document.getElementById('dlg').hidden=!open;},
+  findBar(open){const f=document.getElementById('findbar');f.hidden=!open;
+    if(open) document.getElementById('findinput').focus(); else document.getElementById('findinput').blur();},get variant(){return variant;},
+  addMessage(n,parent,sender,text){CONVO.chat_messages.push(M(n,parent,sender,text));
+    CONVO.current_leaf_message_uuid=id(n);BRANCH_A.push(n);
+    if(!variant)PATH=BRANCH_A.slice();render();}};
+window.__panel=CT.panel;
+</script>

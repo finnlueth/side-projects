@@ -292,7 +292,8 @@
       this.status = 'idle'; // idle | loading | ready | error
       this.error = null;
       this.selectedId = null;
-      this.currentId = null;
+      this.currentIds = new Set();
+      this.currentKey = '';
       this.loadedAt = 0;
       this.dirty = true;
       this.view = { x: 0, y: 0, scale: 1 };
@@ -304,6 +305,7 @@
       this.exitTimer = 0;
       this.viewIsDefault = false;
       this.centreOnCurrent = false;
+      this.shapeReportedFor = null;
       this.detailHeight = 0;
     }
 
@@ -550,7 +552,7 @@
       if (moved.ok) {
         // Only reload once the move is readable, or claude.ai reloads onto the old branch.
         this.toast('Switching branch…', { sticky: true });
-        const settled = await CT.api.confirmLeaf(this.conversationId, leaf.id);
+        const settled = await CT.api.confirmLeaf(this.conversationId, moved.leafId || leaf.id);
         if (!settled) {
           console.warn('[claude-tree] branch move accepted but not yet readable; ' +
             'reloading anyway — the chat may need a further refresh');
@@ -669,9 +671,13 @@
         this.error = null;
         this.loadedAt = Date.now();
         this.dirty = false;
-        void this.reportTreeShape(tree);
+        if (this.shapeReportedFor !== this.conversationId) {
+          this.shapeReportedFor = this.conversationId;
+          void this.reportTreeShape(tree);
+        }
         this.selectedId = tree.nodes.has(previousSelection) ? previousSelection : null;
-        if (!tree.nodes.has(this.currentId)) this.currentId = null;
+        this.currentIds = new Set([...this.currentIds].filter((id) => tree.nodes.has(id)));
+        this.currentKey = [...this.currentIds].join(',');
         this.renderAll();
         if (isFirstRender) this.resetView();
       } catch (err) {
@@ -822,7 +828,7 @@
     nodeHtml(node, nodeW) {
       const isPath = node.onPath;
       const isSelected = node.id === this.selectedId;
-      const isCurrent = node.id === this.currentId;
+      const isCurrent = this.currentIds.has(node.id);
       const role = node.sender === 'human' ? 'You' : 'Claude';
       const variant = node.siblingCount > 1
         ? `<span class="ct-node-variant">${node.siblingIndex + 1}/${node.siblingCount}</span>`
@@ -926,21 +932,29 @@
       detail.hidden = false;
     }
 
-    /** Outline the message the chat is currently showing; selection still wins. */
-    setCurrent(id) {
-      if (this.currentId === id) return;
-      this.currentId = id;
+    /**
+     * Outline every message currently on screen in the chat; selection still wins.
+     * @param {string[]} ids message ids, in the order they appear
+     */
+    setCurrent(ids) {
+      const visible = Array.isArray(ids) ? ids : (ids ? [ids] : []);
+      const key = visible.join(',');
+      if (this.currentKey === key) return;
+      this.currentKey = key;
+      this.currentIds = new Set(visible);
       if (!this.mounted) return;
+
       for (const el of this.el.nodes.querySelectorAll('.ct-node.is-current')) {
         el.classList.remove('is-current');
       }
-      if (!id) return;
-      this.el.nodes.querySelector(`.ct-node[data-id="${CSS.escape(id)}"]`)?.classList.add('is-current');
+      for (const id of visible) {
+        this.el.nodes.querySelector(`.ct-node[data-id="${CSS.escape(id)}"]`)?.classList.add('is-current');
+      }
 
-      // On opening, bring the message the chat is on into the middle of the pane.
-      if (this.centreOnCurrent) {
+      // On opening, bring the top of what the chat is showing into the middle of the pane.
+      if (this.centreOnCurrent && visible.length) {
         this.centreOnCurrent = false;
-        this.centerOn(id);
+        this.centerOn(visible[0]);
       }
     }
 
@@ -1206,5 +1220,5 @@
     }
   }
 
-  CT.ui = { TreePanel, createHost, ICON, icon, discoverGlyphs };
+  CT.ui = { TreePanel, createHost, ICON };
 })();

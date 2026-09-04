@@ -30,15 +30,30 @@
    * this short are matched from the start of the message instead of anywhere inside it,
    * which keeps "ok" from matching the middle of a longer one.
    */
-  const MIN_NEEDLE = 4;
+  const MIN_NEEDLE = 2;
   const LOOSE_MATCH = 12;
+  /** Scroll positions to try when hunting for a message that has not been rendered. */
+  const SWEEP_STEPS = 6;
+
+  /** The message itself inside a transcript row, without the action bar around it. */
+  const BODY_SELECTOR = '[data-testid="user-message"], .font-claude-response, .font-claude-message';
 
   /** Does this element's text belong to a message starting with `needle`? */
   function textMatches(text, needle) {
     return needle.length >= LOOSE_MATCH ? text.includes(needle) : text.startsWith(needle);
   }
-  /** Scroll positions to try when hunting for a message that has not been rendered. */
-  const SWEEP_STEPS = 6;
+
+  /**
+   * Comparable text for one message.
+   *
+   * A transcript row also holds its action bar — "Copy", "Retry", the "1 / 4" variant
+   * readout — and that trailing chrome swamps a two-word message, which is why the shortest
+   * turns could not be matched at all. The body element carries the message and nothing else.
+   */
+  function messageText(el) {
+    const body = el.querySelector?.(BODY_SELECTOR);
+    return elementText(body || el);
+  }
 
   /**
    * Reduce text to letters and digits.
@@ -84,14 +99,109 @@
     return sender === 'human' || sender === 'assistant' ? sender : null;
   }
 
-  /** Claude may carry the message uuid in the DOM; these are the cheap shapes to test. */
-  function findByUuid(id) {
-    if (!id) return null;
-    const value = CSS.escape(id);
-    return document.querySelector(
-      `[data-message-id="${value}"], [data-message-uuid="${value}"], ` +
-      `[data-uuid="${value}"], [data-id="${value}"], [id="${value}"]`
-    );
+  /**
+   * Claude clamps this attribute: the last ten rows carry their true distance from the end
+   * of the branch, everything older reports 10.
+   */
+  const FROM_TAIL_CLAMP = 10;
+
+  /** The messages on the branch the chat is showing, in order, with their match needles. */
+  let branch = [];
+
+  /** @param {object[]} nodes ordered messages of the branch currently displayed */
+  function setBranch(nodes) {
+    branch = (nodes || []).map((node) => ({ node, needle: needleFor(node) }));
+  }
+
+  /**
+   * Line the rendered rows up with the messages on the branch.
+   *
+   * Text is not an identity: two messages can read exactly the same, and a message whose
+   * wording the page renders differently matches nothing at all. Position is an identity.
+   * Claude renders a contiguous window of the branch, so the entire alignment is one offset,
+   * and one anchor fixes it — taken from `data-perf-row-from-tail` where that is exact, and
+   * from a text match only when every rendered row is beyond the clamp.
+   *
+   * The sender of every row is checked against the message it lands on; a single mismatch
+   * discards the alignment rather than reporting something wrong.
+   *
+   * @returns {{el: Element, node: object}[]} one entry per rendered row, in document order
+   */
+  function alignRows() {
+    // Ordered by where they are on screen, not by where they sit in the document: a
+    // virtualised list recycles rows, so the DOM order of a scrolled transcript is not the
+    // order the reader sees, and the offset below depends on the visual order being right.
+    const rows = messageElements()
+      .map((el) => ({ el, top: el.getBoundingClientRect().top }))
+      .filter((row) => Number.isFinite(row.top))
+      .sort((a, b) => a.top - b.top)
+      .map((row) => row.el);
+    if (!rows.length || !branch.length) return [];
+
+    let atRow = -1;
+    let atIndex = -1;
+
+    for (let j = 0; j < rows.length && atRow < 0; j++) {
+      const tail = Number(rows[j].getAttribute('data-perf-row-from-tail'));
+      if (Number.isFinite(tail) && tail < FROM_TAIL_CLAMP) {
+        atRow = j;
+        atIndex = branch.length - 1 - tail;
+      }
+    }
+
+    if (atRow < 0) {
+      // Every row is beyond the clamp: fall back to text for the anchor alone, and let
+      // position carry the rest — including any duplicates around it.
+      const votes = new Map();
+      for (let j = 0; j < rows.length; j++) {
+        const text = messageText(rows[j]);
+        for (let i = 0; i < branch.length; i++) {
+          if (!branch[i].needle || !textMatches(text, branch[i].needle)) continue;
+          const offset = i - j;
+          votes.set(offset, (votes.get(offset) ?? 0) + 1);
+        }
+      }
+      let best = null;
+      for (const [offset, count] of votes) {
+        if (!best || count > best.count) best = { offset, count };
+      }
+      if (!best) return [];
+      atRow = 0;
+      atIndex = best.offset;
+    }
+
+    const aligned = [];
+    let checked = 0;
+    let agreed = 0;
+    for (let j = 0; j < rows.length; j++) {
+      const entry = branch[atIndex + (j - atRow)];
+      if (!entry) continue;
+      const sender = rows[j].getAttribute('data-perf-row');
+      if (sender && sender !== entry.node.sender) return []; // clearly wrong; report nothing
+
+      // Senders alternate, so they alone cannot catch an alignment that is off by an even
+      // number of rows. Confirm with the text of the first few rows that have a needle.
+      if (checked < 3 && entry.needle.length >= MIN_NEEDLE) {
+        checked += 1;
+        if (textMatches(messageText(rows[j]), entry.needle)) agreed += 1;
+      }
+      aligned.push({ el: rows[j], node: entry.node });
+    }
+    if (checked && !agreed) return []; // the offset is wrong; better to show nothing
+    return aligned;
+  }
+
+  /** The row showing a given message, or null when the chat is not showing it. */
+  function findElement(node) {
+    if (!node) return null;
+    const rows = alignRows();
+    for (const row of rows) {
+      if (row.node.id === node.id) return row.el;
+    }
+    // A working alignment is authoritative: if the message is not in it, it is not on
+    // screen, and guessing by text here would hand back somebody else's row. Text is only
+    // for when there is no alignment at all.
+    return rows.length ? null : findByText(node);
   }
 
   /** Smallest rendered element containing the message — the tightest match wins. */
@@ -104,16 +214,12 @@
     for (const el of messageElements()) {
       const sender = senderOf(el);
       if (sender && node.sender && sender !== node.sender) continue;
-      const text = elementText(el);
+      const text = messageText(el);
       if (text.length >= bestLength || !textMatches(text, needle)) continue;
       best = el;
       bestLength = text.length;
     }
     return best;
-  }
-
-  function findElement(node) {
-    return findByUuid(node.id) || findByText(node);
   }
 
   function findScroller() {
@@ -157,59 +263,53 @@
   const controlName = (el) =>
     (el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent || '').trim();
 
-  /**
-   * Is this element the "n / m" readout of a variant switcher? The digits may be split
-   * across nested spans, but a readout never contains a button.
-   * @returns {?{index: number, count: number}}
-   */
-  function readVariantCount(el) {
-    if (el.querySelector('button, [role="button"]')) return null;
-    const match = /^(\d+)\s*\/\s*(\d+)$/.exec((el.textContent || '').trim());
-    return match ? { index: Number(match[1]) - 1, count: Number(match[2]) } : null;
-  }
+  /** Claude's own variant controls. Anything else is guesswork and gets nothing clicked. */
+  const PREV_SELECTOR = '[data-testid="action-bar-previous-version"]';
+  const NEXT_SELECTOR = '[data-testid="action-bar-next-version"]';
 
-  /** Walk up from a readout looking for the container holding exactly two controls. */
-  function pairAround(readout) {
-    let scope = readout.parentElement;
-    for (let up = 0; up < 3 && scope; up += 1, scope = scope.parentElement) {
-      const buttons = Array.from(scope.querySelectorAll('button, [role="button"]'));
-      if (buttons.length === 2) return buttons;
-    }
-    return null;
+  function namedVersionControls(row) {
+    const buttons = Array.from(row.querySelectorAll('button, [role="button"]'));
+    const prev = buttons.find((b) => /\bprevious\b.*\bversion\b|\bversion\b.*\bprevious\b/i.test(controlName(b)));
+    const next = buttons.find((b) => /\bnext\b.*\bversion\b|\bversion\b.*\bnext\b/i.test(controlName(b)));
+    return prev && next && prev !== next ? [prev, next] : null;
   }
 
   /**
    * Locate Claude's variant switcher on a rendered message.
    *
-   * Two shapes are recognised: an "n / m" readout with a control either side, which also
-   * says which variant is showing, and a bare previous/next pair, which does not. Neither
-   * is matched on class names, and every click is verified afterwards, so a mis-identified
-   * control changes nothing that is not immediately undone.
+   * Only Claude's own controls count — its `action-bar-*-version` test ids, or a pair
+   * labelled "previous version" / "next version". An earlier version of this matched the
+   * *shape* of an "n / m" readout with two buttons near it, which is not safe: a message
+   * containing "p(ω) = 1/6" renders exactly that shape, and the buttons nearby are Copy and
+   * Retry. Guessing there does not mis-navigate, it regenerates an answer.
+   *
+   * @returns {?{index: ?number, count: ?number, prev: Element, next: Element}}
    */
-  function findVariantSwitcher(el, expectedCount) {
+  function findVariantSwitcher(el) {
     if (!el) return null;
     const row = el.closest('[data-perf-row]') || el.parentElement || el;
-    const scopes = [row];
-    // Claude groups per-message controls in an action bar; search that too.
-    const bar = row.querySelector('[data-testid^="action-bar-"]')?.parentElement;
-    if (bar && bar !== row) scopes.push(bar);
 
-    for (const scope of scopes) {
-      for (const candidate of scope.querySelectorAll('*')) {
-        const readout = readVariantCount(candidate);
-        if (!readout || readout.count !== expectedCount) continue;
-
-        const buttons = pairAround(candidate);
-        if (!buttons) continue;
-        return { index: readout.index, prev: buttons[0], next: buttons[1] };
-      }
+    let prev = row.querySelector(PREV_SELECTOR);
+    let next = row.querySelector(NEXT_SELECTOR);
+    if (!prev || !next) {
+      const named = namedVersionControls(row);
+      if (!named) return null;
+      [prev, next] = named;
     }
 
-    for (const scope of scopes) {
-      const buttons = Array.from(scope.querySelectorAll('button, [role="button"]'));
-      const prev = buttons.find((b) => /\b(previous|prev)\b/i.test(controlName(b)));
-      const next = buttons.find((b) => /\bnext\b/i.test(controlName(b)));
-      if (prev && next && prev !== next) return { index: null, prev, next };
+    const readout = readoutBetween(prev, next);
+    return { index: readout?.index ?? null, count: readout?.count ?? null, prev, next };
+  }
+
+  /** The "n / m" readout sitting between two switcher controls. */
+  function readoutBetween(prev, next) {
+    let scope = prev.parentElement;
+    for (let up = 0; up < 3 && scope; up += 1, scope = scope.parentElement) {
+      if (!scope.contains(next)) continue;
+      for (const candidate of scope.querySelectorAll('*')) {
+        const readout = readVariantCount(candidate);
+        if (readout) return readout;
+      }
     }
     return null;
   }
@@ -219,6 +319,7 @@
    * is not necessarily absent — the message just has not been pointed at.
    */
   async function hover(el) {
+    if (!el) return;
     const row = el.closest('[data-perf-row]') || el;
     const rect = row.getBoundingClientRect();
     const at = { clientX: rect.left + rect.width / 2, clientY: rect.top + Math.min(24, rect.height / 2) };
@@ -230,9 +331,36 @@
   }
 
   /** Find the switcher, pointing at the message first if it is not already showing one. */
-  async function locateSwitcher(el, expectedCount) {
-    return findVariantSwitcher(el, expectedCount)
-      ?? (await hover(el), findVariantSwitcher(el, expectedCount));
+  async function locateSwitcher(el) {
+    if (!el) return null;
+    return findVariantSwitcher(el) ?? (await hover(el), findVariantSwitcher(el));
+  }
+
+  /**
+   * Press a control the way a person does.
+   *
+   * `element.click()` dispatches a lone click event. Claude's controls are built on handlers
+   * that can key off the pointer sequence instead, and those never fire — the button looks
+   * pressed, nothing happens, and the switch silently fails. Sending the whole sequence
+   * covers both.
+   */
+  function press(button) {
+    const rect = button.getBoundingClientRect();
+    const at = {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      clientX: rect.left + rect.width / 2,
+      clientY: rect.top + rect.height / 2,
+      button: 0,
+      buttons: 1,
+    };
+    button.dispatchEvent(new PointerEvent('pointerdown', { ...at, pointerId: 1, isPrimary: true }));
+    button.dispatchEvent(new MouseEvent('mousedown', at));
+    button.focus?.();
+    button.dispatchEvent(new PointerEvent('pointerup', { ...at, buttons: 0, pointerId: 1, isPrimary: true }));
+    button.dispatchEvent(new MouseEvent('mouseup', { ...at, buttons: 0 }));
+    button.dispatchEvent(new MouseEvent('click', { ...at, buttons: 0 }));
   }
 
   /**
@@ -242,56 +370,47 @@
    * which is worth saying out loud, because nothing else about the pane would reveal it.
    */
   function switcherOnScreen() {
-    for (const el of document.querySelectorAll('[data-perf-row] *')) {
-      if (readVariantCount(el)) return true;
-    }
-    return false;
+    if (document.querySelector(`${PREV_SELECTOR}, ${NEXT_SELECTOR}`)) return true;
+    return messageElements().some((row) => namedVersionControls(row));
   }
 
   async function hasVisibleSwitcher() {
     if (switcherOnScreen()) return true;
-    // Claude only renders a message's controls while it is pointed at, so a switcher that
-    // is not on screen has to be asked for before its absence means anything.
-    for (const row of messageElements().slice(0, 12)) {
+    // Claude only renders a message's controls while it is pointed at, so a switcher that is
+    // not on screen has to be asked for before its absence means anything. Each probe costs
+    // a frame or two of synthetic pointer events over the reader's messages, so only a few
+    // rows are tried, and the caller runs this once per conversation rather than per load.
+    for (const row of messageElements().slice(-4)) {
       await hover(row);
       if (switcherOnScreen()) return true;
     }
     return false;
   }
 
-  /** Which of a set of siblings the chat is currently rendering, if any. */
-  function renderedSibling(siblings) {
-    return siblings.find((sibling) => findElement(sibling)) ?? null;
-  }
-
   /**
-   * The shallowest fork on the way to `node` where the chat is showing a different variant,
-   * together with the switcher on the variant that is currently rendered.
+   * The shallowest fork on the way to `node` where the chat is showing a different variant.
+   *
+   * Which sibling is showing comes from the tree's own active path, not from what happens to
+   * be rendered — the branch point is usually far off screen, and its absence from the DOM
+   * says nothing about which variant is selected.
    */
   function findDivergence(node) {
     let found = null;
     for (let n = node; n && n.parent; n = n.parent) {
       const siblings = n.parent.children;
       if (siblings.length < 2) continue;
-      const shown = renderedSibling(siblings);
-      if (!shown || shown === n) continue; // this fork already shows the right variant
-      found = { wanted: n, siblings, shown }; // keep going: prefer the shallowest fork
+      const showing = siblings.find((sibling) => sibling.onPath);
+      if (!showing || showing === n) continue; // this fork already shows the right variant
+      found = { wanted: n, siblings, showing }; // keep going: prefer the shallowest fork
     }
     return found;
   }
 
-  /** Click one control and report whether the chat actually moved to another variant. */
-  async function clickAndVerify(control, siblings, before) {
-    control.click();
-    await settle();
-    const now = renderedSibling(siblings);
-    return Boolean(now && now !== before);
-  }
-
   /**
-   * Walk the chat onto the branch a message lives on by clicking the same switcher a person
-   * would. Every click is checked; if one does not move the chat it is undone and the walk
-   * stops, so nothing is left in a state the user did not ask for.
+   * Walk the chat onto the branch a message lives on by clicking the same controls a person
+   * would. Every click is verified by text — the row alignment describes the branch that was
+   * showing before the click, so it cannot be trusted to judge the result — and a click that
+   * changes nothing is undone.
    *
    * @returns {Promise<boolean>} whether the displayed branch was changed
    */
@@ -299,37 +418,57 @@
     let switched = false;
 
     for (let hop = 0; hop < 4; hop++) {
-      const divergence = findDivergence(node);
+      const divergence = switched ? findDivergenceByText(node) : findDivergence(node);
       if (!divergence) break;
-      const { wanted, siblings, shown } = divergence;
+      const { wanted, siblings, showing } = divergence;
 
-      const switcher = await locateSwitcher(findElement(shown), siblings.length);
+      // The fork has to be on screen for Claude to have rendered its controls.
+      const row = findElement(showing) || (await hunt(showing));
+      if (!row) break;
+
+      const switcher = await locateSwitcher(row);
       if (!switcher) break;
 
-      // With an "n / m" readout we know the direction and distance; without one, step in a
-      // direction until the variant we want appears, then stop.
-      const from = switcher.index ?? siblings.indexOf(shown);
-      const steps = switcher.index === null ? siblings.length - 1 : Math.abs(wanted.siblingIndex - from);
+      const from = switcher.index ?? siblings.indexOf(showing);
+      const total = switcher.count ?? siblings.length;
       const forward = wanted.siblingIndex > from;
+      const steps = switcher.index === null ? total - 1 : Math.abs(wanted.siblingIndex - from);
 
       let moved = 0;
       for (let i = 0; i < steps; i++) {
-        const before = renderedSibling(siblings);
-        const control = await locateSwitcher(findElement(before), siblings.length);
+        const before = findByText(showing);
+        const control = await locateSwitcher(before || row);
         if (!control) break;
-        if (!(await clickAndVerify(forward ? control.next : control.prev, siblings, before))) {
-          // That control did nothing; put the chat back where it was and give up here.
-          const undo = await locateSwitcher(findElement(renderedSibling(siblings) || before), siblings.length);
-          for (let back = 0; back < moved && undo; back++) (forward ? undo.prev : undo.next).click();
-          return switched;
-        }
-        moved += 1;
+
+        const button = forward ? control.next : control.prev;
+        if (button.disabled || button.getAttribute('aria-disabled') === 'true') break;
+        press(button);
         switched = true;
-        if (renderedSibling(siblings) === wanted) break;
+        moved += 1;
+        await settle();
+
+        if (findByText(wanted)) break;           // the variant we wanted is now showing
+        if (before && findByText(showing) === before && moved >= total) break;
       }
       if (!moved) break;
+      // The alignment describes the branch we just left; drop it until the tree reloads.
+      setBranch([]);
+      if (findByText(node)) break;
     }
     return switched;
+  }
+
+  /** After a switch the tree's active path is stale, so re-read the fork from the page. */
+  function findDivergenceByText(node) {
+    let found = null;
+    for (let n = node; n && n.parent; n = n.parent) {
+      const siblings = n.parent.children;
+      if (siblings.length < 2) continue;
+      const showing = siblings.find((sibling) => findByText(sibling));
+      if (!showing || showing === n) continue;
+      found = { wanted: n, siblings, showing };
+    }
+    return found;
   }
 
   /** Scroll the chat until Claude has rendered `node`, or give up. */
@@ -365,7 +504,10 @@
    * @returns {Promise<'found'|'switched'|'off-path'|'not-found'>}
    */
   async function revealNode(node, { onPath, position } = {}) {
-    let el = await hunt(node, position);
+    // Sweep the scroller only for a message that should be on the branch already showing.
+    // For one the tree places elsewhere, a cheap look is enough before switching — sweeping
+    // the whole conversation just to fail first costs a second and a half.
+    let el = onPath ? await hunt(node, position) : findElement(node);
     if (el) {
       scrollToStart(el);
       return 'found';
@@ -389,39 +531,22 @@
    * @param {(id: string|null) => void} onChange
    */
   function trackReading(onChange) {
-    let index = [];
-    let currentId = null;
+    let currentKey = '';
     let frame = 0;
 
     const evaluate = () => {
       frame = 0;
-      if (!index.length) return;
-
-      // A line near the top of the window: the message you are reading is the one it falls
-      // in. Nothing is carried between frames, so the mark cannot drift or stick.
-      const focus = window.innerHeight * 0.3;
-
-      let best = null;
-      let bestDistance = Infinity;
-      for (const el of messageElements()) {
+      const ids = [];
+      for (const { el, node } of alignRows()) {
         const rect = el.getBoundingClientRect();
-        if (!rect.height) continue;
-        const distance = rect.top > focus ? rect.top - focus
-          : rect.bottom < focus ? focus - rect.bottom
-            : 0;
-        if (distance >= bestDistance) continue;
-        bestDistance = distance;
-        best = el;
+        if (!rect.height || rect.bottom <= 0 || rect.top >= window.innerHeight) continue;
+        ids.push(node.id);
       }
 
-      let id = null;
-      if (best) {
-        const text = elementText(best);
-        id = index.find((entry) => textMatches(text, entry.needle))?.id ?? null;
-      }
-      if (id === currentId) return;
-      currentId = id;
-      onChange(id);
+      const key = ids.join(',');
+      if (key === currentKey) return;
+      currentKey = key;
+      onChange(ids);
     };
 
     const schedule = () => {
@@ -435,10 +560,8 @@
     return {
       /** @param {object[]} nodes messages on the branch the chat is showing */
       setNodes(nodes) {
-        index = nodes
-          .map((node) => ({ id: node.id, needle: needleFor(node) }))
-          .filter((entry) => entry.needle.length >= MIN_NEEDLE);
-        currentId = null;
+        setBranch(nodes);
+        currentKey = '';
         schedule();
       },
       refresh: schedule,
@@ -518,5 +641,5 @@
     };
   }
 
-  CT.chat = { revealNode, switchToBranch, hasVisibleSwitcher, trackReading, watchForUpdates, findElement, looseText };
+  CT.chat = { revealNode, hasVisibleSwitcher, trackReading, watchForUpdates, findElement, alignRows };
 })();

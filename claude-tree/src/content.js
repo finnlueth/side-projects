@@ -236,7 +236,7 @@
 
   function startWatching() {
     if (!reading) {
-      reading = CT.chat.trackReading((id) => panel.setCurrent(id));
+      reading = CT.chat.trackReading((ids) => panel.setCurrent(ids));
       panel.onTreeChange = (tree) => {
         reading?.setNodes(tree ? tree.order.filter((node) => node.onPath) : []);
       };

@@ -283,5 +283,5 @@
     return current;
   }
 
-  CT.model = { buildTree, computeLayout, snippet, collapse, deepestLeaf };
+  CT.model = { buildTree, computeLayout, snippet, deepestLeaf };
 })();

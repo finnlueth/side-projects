@@ -20,10 +20,10 @@ through that tree, with a small `‹ 2/3 ›` switcher. This pane shows the whol
   chat to that message. It scrolls, hunting for the message if Claude has not rendered that far
   yet; and when the message is on another branch it moves the conversation there first, so the
   same button reads *Show this branch in the chat* and there is nothing else to find.
-- **Follows where you are** — whichever message crosses a line near the top of the window is
-  outlined in the tree, so you always know your place. Short turns from either side are matched
-  from the start of their text, so a "Thanks" is tracked as readily as a long answer. The
-  selected message's accent outline takes precedence.
+- **Follows where you are** — every message currently on screen in the chat is outlined in the
+  tree, so the run you are reading is visible at a glance. Short turns from either side are
+  matched from the start of their text, so a "Thanks" is tracked as readily as a long answer.
+  The selected message's accent outline takes precedence over the outline.
 - **Keeps up on its own** — refreshes when you send a message, when Claude answers, and when an
   edit or a regeneration creates a new branch.
 - **Two directions** — top-to-bottom or left-to-right, with pan and zoom. The pane and the
@@ -80,8 +80,15 @@ tree. The tree reloads when you switch conversations, refreshes itself when you 
 tab after being away for more than 30 seconds, and updates in place — keeping your view, zoom and
 selection — whenever the chat changes.
 
-Matching a tree node to a message in the page is done on letters and digits only, so markdown,
-punctuation and whitespace differences between the API text and the rendered page do not matter.
+Messages are matched to the page by **position, not by text**. Text is not an identity: two
+turns can read exactly the same, and one the page renders differently matches nothing at all.
+Claude renders a contiguous window of the branch and tags each row with its distance from the
+end, so the whole alignment is a single offset that one row fixes — after sorting rows by where
+they are on screen, since a virtualised list recycles them out of document order. Every row's
+sender, and the text of the first few, are checked against the messages they land on; a
+disagreement discards the alignment rather than reporting something wrong. Text matching remains
+only as a fallback for markup without those attributes, and there it compares the message body
+rather than the whole row, so the action bar cannot swamp a two-word turn.
 If a message has not been rendered yet, *find in chat* walks the chat scroller until Claude
 renders it, starting from an estimate of where along the branch it sits.
 
@@ -133,10 +140,16 @@ would make fixed elements scroll away with the page. Closing the pane removes al
   message, using the endpoint claude.ai uses for its own `‹ 2/3 ›` control
   (`PUT .../chat_conversations/{id}/current_leaf_message_uuid`). Nothing else is ever written:
   no messages, edits or deletions. The in-page control is tried first, because when it works
-  the chat updates without a reload; the API is the fallback, and the page reloads afterwards
-  so Claude re-renders on the branch you picked — the pane reopens with it. The reload waits
-  until the move is actually readable, because the write is accepted before it has propagated,
-  and reloading into that gap is what leaves the chat showing the branch you just left.
+  the chat updates with no reload at all: it drives Claude's own `action-bar-previous-version`
+  and `action-bar-next-version` buttons, falling back to the shape of an `n / m` readout with a
+  control either side. Those buttons only exist while a message is pointed at, and on a long
+  conversation the branch point is usually far off screen, so the fork is scrolled into view and
+  hovered before they are looked for. Every click is checked: one that does not move the chat is
+  undone and the walk stops, so a mis-identified control cannot leave the conversation somewhere
+  you did not ask for. Only when no control can be driven does it fall back to the API, which
+  needs a reload — and that reload waits until the move is readable, because the write is
+  accepted before it has propagated and reloading into that gap is what leaves the chat showing
+  the branch you just left.
 - **Two things are behind flags in `src/panel.js`**, not deleted: `SHOW_STATS` hides the
   summary pills above the tree, and `SHOW_TOASTS` controls the pane's notifications. Toasts
   are currently on, and now name the reason a branch switch failed rather than just that it

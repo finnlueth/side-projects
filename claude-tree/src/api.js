@@ -174,7 +174,15 @@
         headers: { 'content-type': 'application/json', accept: 'application/json' },
         body: JSON.stringify({ current_leaf_message_uuid: leafId }),
       });
-      if (res.ok) return { ok: true };
+      if (res.ok) {
+        // The response echoes the leaf the server actually settled on; confirm against that
+        // rather than what we asked for, in case it normalises the choice.
+        let settled = leafId;
+        try {
+          settled = (await res.json())?.current_leaf_message_uuid || leafId;
+        } catch { /* an empty body is fine; the request succeeded */ }
+        return { ok: true, leafId: settled };
+      }
       return { ok: false, reason: `claude.ai answered HTTP ${res.status}` };
     } catch (err) {
       return { ok: false, reason: `request blocked (${err?.message || 'network error'})` };
