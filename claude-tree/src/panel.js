@@ -20,8 +20,8 @@
 
   /** Box + gap sizes per orientation, in the layout's (spread, depth) space. */
   const LAYOUT = {
-    vertical: { spread: 180, spreadGap: 22, depth: 64, depthGap: 34 },
-    horizontal: { spread: 62, spreadGap: 16, depth: 212, depthGap: 58 },
+    vertical: { spread: 180, spreadGap: 22, depth: 72, depthGap: 32 },
+    horizontal: { spread: 70, spreadGap: 16, depth: 212, depthGap: 58 },
   };
 
   /**
@@ -42,6 +42,59 @@
     '<circle cx="12" cy="4.5" r="2.2"/><circle cx="6" cy="19.5" r="2.2"/>' +
     '<circle cx="18" cy="19.5" r="2.2"/>' +
     '<path d="M12 6.7v3.6c0 3.4-6 2.6-6 7M12 10.3c0 3.4 6 2.6 6 7"/>';
+
+  /**
+   * Icons.
+   *
+   * claude.ai draws its icons from an Anthropicons font, so the pane uses the same glyphs
+   * rather than redrawing them. Codepoints are read off the live page by accessible name
+   * where possible — that self-corrects if Anthropic renumbers the font — and fall back to
+   * the codepoints observed in Claude's own controls, then to an SVG of our own.
+   */
+  const GLYPHS = { refresh: '\ue11d', copy: '\ue056', search: '\ue0d3', expand: '\ue067' };
+
+  /** Accessible names on claude.ai's own controls that render the icon we want. */
+  const DISCOVERABLE = {
+    close: /^(close|dismiss)\b/i,
+    refresh: /^retry$/i,
+    copy: /^copy$/i,
+    search: /^search$/i,
+  };
+
+  const discovered = new Map();
+  let hasIconFont = null;
+
+  function iconFontLoaded() {
+    if (hasIconFont) return true;
+    try {
+      // Only a positive result is cached — the face may not be registered on an early call.
+      hasIconFont = Array.from(document.fonts).some((face) => /anthropicons/i.test(face.family));
+    } catch {
+      hasIconFont = false;
+    }
+    return hasIconFont;
+  }
+
+  /** Harvest glyphs from claude.ai's own buttons. Cheap, and safe to call again. */
+  function discoverGlyphs() {
+    if (!iconFontLoaded()) return;
+    const wanted = Object.entries(DISCOVERABLE).filter(([key]) => !discovered.has(key));
+    if (!wanted.length) return;
+    for (const el of document.querySelectorAll('[data-cds="Icon"]')) {
+      const name = el.closest('[aria-label]')?.getAttribute('aria-label')?.trim();
+      const glyph = el.textContent?.trim();
+      if (!name || !glyph || glyph.length > 2) continue;
+      for (const [key, pattern] of wanted) {
+        if (!discovered.has(key) && pattern.test(name)) discovered.set(key, glyph);
+      }
+    }
+  }
+
+  function icon(name) {
+    const glyph = discovered.get(name) ?? (iconFontLoaded() ? GLYPHS[name] : null);
+    if (glyph) return `<span class="ct-glyph" aria-hidden="true">${glyph}</span>`;
+    return ICON[name] ?? '';
+  }
 
   const ICON = {
     tree: glyph(TREE_PATHS),
@@ -227,6 +280,7 @@
       this.onStatsChange = null;
       this.onTreeChange = null;
       this.toastTimer = 0;
+      this.exitTimer = 0;
     }
 
     /** Widest the pane may get without crowding the chat out of the window. */
@@ -254,6 +308,7 @@
       }
       this.width = clamp(Number(prefs.width) || DEFAULT_WIDTH, MIN_WIDTH, this.maxWidth());
 
+      discoverGlyphs();
       const { host, shadow } = await createHost('ct-panel-host', { hidden: true });
       this.host = host;
       this.shadow = shadow;
@@ -272,29 +327,25 @@
       root.setAttribute('aria-label', 'Claude conversation tree');
       root.innerHTML = `
         <div class="ct-resize" role="separator" aria-orientation="vertical" title="Drag to resize"></div>
-        <header class="ct-head">
-          <div class="ct-head-text">
-            <h1 class="ct-title">Conversation tree</h1>
-            <p class="ct-subtitle" data-role="subtitle">No conversation open</p>
+        <div class="ct-bar">
+          <div class="ct-tools" data-role="toolbar">
+            <div class="ct-segmented" role="group" aria-label="Tree direction">
+              <button data-action="orient" data-value="vertical" title="Top to bottom" aria-label="Top to bottom">${ICON.tree}</button>
+              <button data-action="orient" data-value="horizontal" title="Left to right" aria-label="Left to right">${ICON.treeRight}</button>
+            </div>
+            <div class="ct-zoom">
+              <button class="ct-icon-btn" data-action="zoom-out" title="Zoom out" aria-label="Zoom out">${ICON.minus}</button>
+              <span class="ct-zoom-value" data-role="zoom">100%</span>
+              <button class="ct-icon-btn" data-action="zoom-in" title="Zoom in" aria-label="Zoom in">${ICON.plus}</button>
+              <button class="ct-icon-btn" data-action="fit" title="Reset view" aria-label="Reset view">${ICON.fit}</button>
+            </div>
           </div>
-          <div class="ct-head-actions">
-            <button class="ct-icon-btn" data-action="refresh" title="Reload the tree" aria-label="Reload the tree">${ICON.refresh}</button>
-            <button class="ct-icon-btn" data-action="close" title="Close panel" aria-label="Close panel">${ICON.close}</button>
-          </div>
-        </header>
-        <div class="ct-stats" data-role="stats"></div>
-        <div class="ct-toolbar" data-role="toolbar">
-          <div class="ct-segmented" role="group" aria-label="Tree direction">
-            <button data-action="orient" data-value="vertical" title="Top to bottom" aria-label="Top to bottom">${ICON.tree}</button>
-            <button data-action="orient" data-value="horizontal" title="Left to right" aria-label="Left to right">${ICON.treeRight}</button>
-          </div>
-          <div class="ct-zoom">
-            <button class="ct-icon-btn" data-action="zoom-out" title="Zoom out" aria-label="Zoom out">${ICON.minus}</button>
-            <span class="ct-zoom-value" data-role="zoom">100%</span>
-            <button class="ct-icon-btn" data-action="zoom-in" title="Zoom in" aria-label="Zoom in">${ICON.plus}</button>
-            <button class="ct-icon-btn" data-action="fit" title="Reset view" aria-label="Reset view">${ICON.fit}</button>
+          <div class="ct-bar-end">
+            <button class="ct-icon-btn" data-action="refresh" title="Reload the tree" aria-label="Reload the tree">${icon('refresh')}</button>
+            <button class="ct-icon-btn" data-action="close" title="Close" aria-label="Close">${icon('close')}</button>
           </div>
         </div>
+        <div class="ct-stats" data-role="stats"></div>
         <div class="ct-canvas" data-role="canvas">
           <div class="ct-viewport" data-role="viewport">
             <svg class="ct-edges" data-role="edges"></svg>
@@ -464,7 +515,16 @@
       await this.ensureMounted();
       if (this.open === open) return;
       this.open = open;
-      this.host.hidden = !open;
+      clearTimeout(this.exitTimer);
+      if (open) {
+        discoverGlyphs();
+        this.host.hidden = false;
+        // A frame with the pane rendered but not yet marked open, so the transition runs.
+        requestAnimationFrame(() => { this.host.dataset.open = 'true'; });
+      } else {
+        this.host.dataset.open = 'false';
+        this.exitTimer = setTimeout(() => { this.host.hidden = true; }, 220);
+      }
       this.onOpenChange?.(open, this.width);
       if (open) {
         if (this.dirty) this.load();
@@ -542,7 +602,7 @@
 
     renderAll() {
       if (!this.mounted) return;
-      this.renderHeader();
+      this.renderChrome();
       this.renderStats();
       this.renderTree();
       this.renderDetail();
@@ -551,13 +611,8 @@
       this.onTreeChange?.(this.tree);
     }
 
-    renderHeader() {
-      // With no conversation the empty state already says so — don't repeat it here.
-      const placeholder = this.status === 'error' ? 'Unavailable' : 'Loading…';
-      this.el.subtitle.hidden = !this.conversationId;
-      this.el.subtitle.textContent = this.tree?.title || placeholder;
-      this.el.subtitle.title = this.el.subtitle.textContent;
-
+    renderChrome() {
+      // The conversation's name is already at the top of the chat — no title here.
       // The zoom and direction controls do nothing without a tree to point them at.
       this.el.toolbar.hidden = !this.tree?.order.length;
       for (const button of this.el.root.querySelectorAll('[data-action="orient"]')) {
@@ -664,11 +719,8 @@
         data-id="${esc(node.id)}" data-sender="${node.sender}"
         style="left:${pos.x}px;top:${pos.y}px;width:${nodeW}px;height:${nodeH}px"
         aria-pressed="${isSelected}">
-        <span class="ct-node-bar"></span>
-        <span class="ct-node-body">
-          <span class="ct-node-meta"><span class="ct-node-role">${role}</span>${tag}${variant}</span>
-          ${preview}
-        </span>
+        <span class="ct-node-meta"><span class="ct-node-who">${role}</span>${tag}${variant}</span>
+        ${preview}
       </button>`;
     }
 
@@ -692,7 +744,7 @@
       }
       if (this.status === 'error') {
         show(`${ICON.warning}<h2>Could not load the tree</h2><p>${esc(this.error)}</p>
-              <button class="ct-btn is-primary" data-action="retry">${ICON.refresh}Try again</button>`);
+              <button class="ct-btn is-primary" data-action="retry">${icon('refresh')}Try again</button>`);
         return;
       }
       if (!this.conversationId) {
@@ -733,13 +785,13 @@
 
       detail.innerHTML = `
         <div class="ct-detail-head">
-          <span class="ct-detail-role" data-sender="${node.sender}">${node.sender === 'human' ? 'You' : 'Claude'}</span>
+          <span class="ct-detail-who">${node.sender === 'human' ? 'You' : 'Claude'}</span>
           <span class="ct-detail-time">${esc(formatTime(node.createdAt))}</span>
           ${nav}
           <div class="ct-detail-actions">
-            <button class="ct-icon-btn" data-detail="locate" title="Find this message in the chat" aria-label="Find this message in the chat">${ICON.locate}</button>
-            <button class="ct-icon-btn" data-detail="copy" title="Copy message text" aria-label="Copy message text">${ICON.copy}</button>
-            <button class="ct-icon-btn" data-detail="close" title="Close details" aria-label="Close details">${ICON.close}</button>
+            <button class="ct-icon-btn" data-detail="locate" title="Find this message in the chat" aria-label="Find this message in the chat">${icon('search')}</button>
+            <button class="ct-icon-btn" data-detail="copy" title="Copy message text" aria-label="Copy message text">${icon('copy')}</button>
+            <button class="ct-icon-btn" data-detail="close" title="Close details" aria-label="Close details">${icon('close')}</button>
           </div>
         </div>
         <div class="ct-detail-body">
@@ -964,5 +1016,5 @@
     }
   }
 
-  CT.ui = { TreePanel, createHost, ICON };
+  CT.ui = { TreePanel, createHost, ICON, icon, discoverGlyphs };
 })();

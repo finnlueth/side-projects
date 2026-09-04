@@ -128,8 +128,20 @@
     requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(resolve, 90)));
   });
 
+  /** Bring a message's first line into view, rather than centring its middle. */
+  function scrollToStart(el) {
+    const scroller = findScroller();
+    if (!scroller || scroller === document.scrollingElement) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    const TOP_INSET = 16;
+    const top = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+    scroller.scrollTo({ top: scroller.scrollTop + top - TOP_INSET, behavior: 'smooth' });
+  }
+
   function flash(el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    scrollToStart(el);
     const previous = el.getAttribute('style');
     el.style.transition = 'box-shadow 180ms ease';
     el.style.boxShadow = '0 0 0 3px rgba(217, 119, 87, 0.6)';
@@ -192,28 +204,39 @@
       frame = 0;
       if (!index.length) return;
       // A little above centre: what you are reading, not what you have scrolled past.
-      const focus = window.innerHeight * 0.34;
+      const focus = window.innerHeight * 0.28;
+      const rows = messageElements()
+        .map((el) => ({ el, rect: el.getBoundingClientRect() }))
+        .filter((row) => row.rect.height)
+        .sort((a, b) => a.rect.top - b.rect.top);
+      if (!rows.length) return;
 
+      /*
+       * Each message claims a run of scrolling that starts where the previous one's ended
+       * and lasts at least DWELL. Without that floor a short prompt between two long
+       * answers is highlighted for only its own height — a flicker while scrolling fast.
+       */
+      const dwell = Math.max(240, window.innerHeight * 0.45);
+      let cursor = -Infinity;
       let best = null;
-      let bestDistance = Infinity;
-      let bestHeight = Infinity;
-      for (const el of messageElements()) {
-        const rect = el.getBoundingClientRect();
-        if (!rect.height || rect.bottom < 0 || rect.top > window.innerHeight) continue;
-        const covers = rect.top <= focus && rect.bottom >= focus;
-        const distance = covers
-          ? 0
-          : Math.min(Math.abs(rect.top - focus), Math.abs(rect.bottom - focus));
-        // Closest to the focus line; on a tie prefer the tighter element.
-        if (distance > bestDistance || (distance === bestDistance && rect.height >= bestHeight)) continue;
-        bestDistance = distance;
-        bestHeight = rect.height;
-        best = el;
+      for (let i = 0; i < rows.length; i++) {
+        const start = Math.max(rows[i].rect.top, cursor);
+        const nextTop = i + 1 < rows.length ? rows[i + 1].rect.top : Infinity;
+        const end = Math.max(nextTop, start + dwell);
+        if (focus >= start && focus < end) {
+          best = rows[i];
+          break;
+        }
+        cursor = end;
+      }
+      // Never hold the mark on a message that has scrolled entirely out of sight.
+      if (!best || best.rect.bottom < 0) {
+        best = rows.find((row) => row.rect.bottom > 0 && row.rect.top < window.innerHeight) ?? null;
       }
 
       let id = null;
       if (best) {
-        const text = elementText(best);
+        const text = elementText(best.el);
         id = index.find((entry) => text.includes(entry.needle))?.id ?? null;
       }
       if (id === currentId) return;
@@ -262,8 +285,21 @@
     const QUIET_MS = 1200;
     const THROTTLE_MS = 2500;
 
+    /**
+     * A cheap fingerprint of the end of the conversation: how many messages are rendered,
+     * and how long the last one is. Sending, receiving and regenerating all change it —
+     * streaming changes it on every tick, which is why a change alone does not trigger a
+     * reload; it has to have stopped changing.
+     */
+    const signature = () => {
+      const rows = document.querySelectorAll(MESSAGE_SELECTOR);
+      const tail = document.querySelector('[data-perf-row-from-tail="0"]') || rows[rows.length - 1];
+      return `${rows.length}:${tail ? (tail.textContent || '').length : 0}`;
+    };
+
     let settleTimer = 0;
-    let lastCount = document.querySelectorAll(MESSAGE_SELECTOR).length;
+    let lastSignature = signature();
+    let changing = false;
     let lastFired = 0;
 
     const fire = (reason) => {
@@ -273,6 +309,7 @@
       onChange(reason);
     };
 
+    // Catches edits and regenerations, which rewrite a branch without touching the tail.
     const observer = new MutationObserver(() => {
       clearTimeout(settleTimer);
       settleTimer = setTimeout(() => fire('settled'), QUIET_MS);
@@ -282,11 +319,15 @@
       subtree: true,
     });
 
-    // Streaming never goes quiet, so a sent message would otherwise wait for the reply.
     const poll = setInterval(() => {
-      const count = document.querySelectorAll(MESSAGE_SELECTOR).length;
-      if (count === lastCount) return;
-      lastCount = count;
+      const current = signature();
+      if (current !== lastSignature) {
+        lastSignature = current;
+        changing = true;      // mid-exchange; wait for it to come to rest
+        return;
+      }
+      if (!changing) return;
+      changing = false;
       fire('messages');
     }, 1000);
 

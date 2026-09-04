@@ -16,19 +16,22 @@ through that tree, with a small `‹ 2/3 ›` switcher. This pane shows the whol
   alternatives.
 - **Message details** — click a node for the full text, timestamp, extended thinking, tools
   used and attachment count, plus `‹ 2/3 ›` navigation between the variants at that fork.
-- **Find in chat** — jumps to and flashes the message in the live conversation, scrolling to
-  hunt it down if Claude has not rendered that far yet.
+- **Find in chat** — jumps to the top of the message in the live conversation and flashes it,
+  scrolling to hunt it down if Claude has not rendered that far yet.
 - **Follows where you are** — the message you are currently reading is outlined in the tree, so
-  you always know your place. The selected message's accent outline takes precedence over it.
+  you always know your place. Every message holds that outline for a minimum run of scrolling, so
+  short prompts between long answers do not flicker past. The selected message's accent outline
+  takes precedence over it.
 - **Keeps up on its own** — refreshes when you send a message, when Claude answers, and when an
   edit or a regeneration creates a new branch.
 - **Two directions** — top-to-bottom or left-to-right, with pan, zoom and a resizable pane.
   Both preferences are remembered.
 - **A real pane, not an overlay** — the page reserves width for it, so the chat reflows beside
   it instead of disappearing underneath.
-- **Matches the app** — docked into Claude's own header next to Share, styled after Claude's
-  document pane, using Claude's palette and, where the page has already loaded them, Claude's
-  own fonts. Follows light and dark mode automatically.
+- **Built from Claude's own design system** — docked into Claude's header next to Share, shaped
+  like Claude's document pane, and drawn with the page's live design tokens, control metrics,
+  typefaces and icon font rather than a private imitation of them. Theme changes and even
+  restyles of claude.ai carry through on their own.
 
 ## Install
 
@@ -80,6 +83,7 @@ renders it, starting from an estimate of where along the branch it sits.
 | `src/model.js` | Turns the flat message list into a tree and lays it out |
 | `src/chat.js` | Locating messages in the page, reading position, change detection |
 | `src/panel.js` | The shadow-DOM side pane: rendering, pan/zoom, detail drawer |
+| `src/panel.css` | Token bindings and pane styling |
 | `src/content.js` | Docks the toggle, reserves page width, follows client-side navigation |
 | `src/background.js` | Toolbar button, keyboard shortcut, and a fetch fallback |
 
@@ -92,6 +96,14 @@ to no server other than claude.ai. Panel preferences are the only thing it store
 The organisation id is taken from the `lastActiveOrg` cookie and only looked up over the
 network if that guess is wrong. All UI lives in a shadow root, so nothing here can affect
 claude.ai's own styles or be affected by them.
+
+Custom properties do cross that shadow boundary, though, which is how the pane reuses Claude's
+design system rather than reimplementing it: colours come from the page's `--bg-*`, `--text-*`,
+`--border-*` and `--accent-brand` scales, metrics from `--cds-radius`, `--cds-h-control` and
+`--cds-pad-*`, motion from `--cds-dur-*` and `--cds-ease-*`, and type from `--font-sans`. Icons
+are glyphs from the Anthropicons font the page already loads, their codepoints read off Claude's
+own buttons by accessible name at runtime so they survive the font being renumbered. Every one
+of these has a fallback, so the pane still renders correctly if a token is renamed or removed.
 
 To make room for the pane, the extension narrows the page's `<body>` box. That is enough for a
 normal-flow app shell; if anything positioned against the viewport still reaches under the
@@ -112,4 +124,7 @@ would make fixed elements scroll away with the page. Closing the pane removes al
   `wiggle-controls-actions-*` test ids and is re-inserted whenever Claude re-renders the header.
   If those disappear it falls back to locating the Share control by accessible name, and failing
   that to a floating pill in the bottom-right corner — never to nothing.
+- **Only the tree glyph is ours.** Icons are taken from Claude's icon font wherever an
+  equivalent exists there; where one cannot be confirmed at runtime the pane falls back to a
+  plain SVG of its own rather than guessing at a codepoint and drawing the wrong picture.
 - Projects, artifacts and other non-chat pages have no tree to show.

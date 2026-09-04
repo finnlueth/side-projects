@@ -1,50 +1,53 @@
 /* ------------------------------------------------------------------------------------ *
- * Claude Tree — panel styles.
+ * Claude Tree — pane styles.
  *
- * Loaded into two shadow roots (the side panel and the floating toggle) so nothing here
- * can leak into claude.ai, and nothing from claude.ai can leak in.
- *
- * Colours follow Claude's own palette: warm cream surfaces, near-black warm text and the
- * terracotta accent. Fonts prefer the families claude.ai has already loaded on the page.
+ * Loaded into two shadow roots (the pane and the header toggle). Custom properties cross
+ * the shadow boundary, so this reuses claude.ai's own design tokens — the `--bg-*`,
+ * `--text-*`, `--border-*` and `--accent-brand` scales, the `--cds-*` control metrics and
+ * timings, and the Anthropicons icon font. Every one carries a fallback so the pane still
+ * renders correctly if a token is renamed or the page is not claude.ai.
  * ------------------------------------------------------------------------------------ */
 
 :host {
   all: initial;
 
-  --ct-accent: #d97757;
-  --ct-accent-hover: #c2603f;
-  --ct-accent-weak: #f7e7df;
-  --ct-human: #d97757;
-  --ct-assistant: #6b7f8f;
+  /* --- claude.ai tokens, light fallbacks ------------------------------------------- */
+  --ct-accent: hsl(var(--accent-brand, 15 63.1% 59.6%));
+  --ct-bg: hsl(var(--bg-000, 0 0% 100%));
+  --ct-canvas: hsl(var(--bg-100, 48 33.3% 97.1%));
+  --ct-surface: hsl(var(--bg-000, 0 0% 100%));
+  --ct-border: hsl(var(--border-300, 51 16.5% 84.5%));
+  --ct-text: hsl(var(--text-100, 60 2.6% 7.6%));
+  --ct-text-2: hsl(var(--text-300, 60 2.5% 23.3%));
+  --ct-text-3: hsl(var(--text-400, 51 3.1% 43.7%));
 
-  --ct-bg: #ffffff;
-  --ct-canvas: #faf9f5;
-  --ct-surface: #ffffff;
-  --ct-surface-2: #f2f0e9;
-  --ct-surface-3: #e8e5db;
-  --ct-border: #e2dfd4;
-  --ct-border-strong: #cfcbbc;
-  --ct-text: #1a1915;
-  --ct-text-2: #55534c;
-  /* Outline for the message the chat is currently showing — neutral, so the accent
-     used for the selected message always reads as the stronger of the two. */
-  --ct-current: #1a1915;
-  --ct-current-soft: rgba(26, 25, 21, 0.16);
-  --ct-text-3: #86837a;
-  --ct-shadow: 0 4px 24px rgba(20, 20, 19, 0.10), 0 1px 2px rgba(20, 20, 19, 0.05);
-  --ct-shadow-node: 0 1px 2px rgba(20, 20, 19, 0.06);
+  /* Overlays stay local: the page's alpha tokens are derived from a neutral that is not
+     guaranteed to invert with the theme, and a wrong-direction overlay is invisible. */
+  --ct-fill: rgba(11, 11, 11, 0.05);
+  --ct-fill-strong: rgba(11, 11, 11, 0.09);
+  --ct-hairline: rgba(11, 11, 11, 0.11);
+  --ct-accent-weak: rgba(217, 119, 87, 0.14);
+  --ct-current: hsl(var(--text-100, 60 2.6% 7.6%));
+  --ct-current-soft: rgba(11, 11, 11, 0.18);
+  --ct-shadow: 0 0 0 1px var(--ct-hairline), 0 4px 24px rgba(11, 11, 11, 0.06);
+  --ct-shadow-node: 0 1px 2px rgba(11, 11, 11, 0.05);
 
-  --ct-font: var(--ct-page-font, "Styrene B", "Styrene A", ui-sans-serif, -apple-system,
+  --ct-font: var(--font-sans, "anthropic-sans", ui-sans-serif, -apple-system,
       BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
-  --ct-font-serif: var(--ct-page-serif, "Copernicus", "Tiempos Text", ui-serif, Georgia,
-      "Times New Roman", serif);
-  --ct-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --ct-font-mono: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  --ct-icon-font: var(--font-anthropicons, "Anthropicons-Variable");
 
-  --ct-radius: 12px;
-  --ct-radius-sm: 8px;
+  --ct-radius: var(--cds-radius--lg, 12px);
+  --ct-radius-sm: var(--cds-radius, 8px);
+  --ct-control: var(--cds-h-control, 32px);
+  --ct-icon-size: var(--cds-icon, 16px);
+  --ct-pad: var(--cds-pad-md, 8px);
+  --ct-ease: var(--cds-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+  --ct-dur: var(--cds-dur-base, 0.18s);
+  --ct-dur-snap: var(--cds-dur-snap, 0.12s);
+
   /* Gap between the pane and the window edge — mirrored by PANE_GAP in content.js. */
   --ct-pane-gap: 8px;
-  --ct-pane-radius: 12px;
 
   display: block;
   color-scheme: light;
@@ -53,8 +56,46 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* The panel is docked to the right edge; the page reserves the space for it (see
-   the pane styles injected by content.js), so it sits beside the chat, not over it. */
+:host([data-theme="dark"]) {
+  --ct-bg: hsl(var(--bg-000, 60 2.1% 18.4%));
+  --ct-canvas: hsl(var(--bg-100, 60 2.7% 14.5%));
+  --ct-surface: hsl(var(--bg-000, 60 2.1% 18.4%));
+  --ct-border: hsl(var(--border-300, 30 3.3% 11.8%));
+  --ct-text: hsl(var(--text-100, 48 33.3% 97.1%));
+  --ct-text-2: hsl(var(--text-300, 50 9% 73.7%));
+  --ct-text-3: hsl(var(--text-400, 48 4.8% 59.2%));
+
+  --ct-fill: rgba(255, 255, 255, 0.07);
+  --ct-fill-strong: rgba(255, 255, 255, 0.12);
+  --ct-hairline: rgba(255, 255, 255, 0.11);
+  --ct-accent-weak: rgba(217, 119, 87, 0.22);
+  --ct-current: #ffffff;
+  --ct-current-soft: rgba(255, 255, 255, 0.22);
+  --ct-shadow: 0 0 0 1px var(--ct-hairline), 0 4px 24px rgba(0, 0, 0, 0.36);
+  --ct-shadow-node: 0 1px 2px rgba(0, 0, 0, 0.22);
+  color-scheme: dark;
+}
+
+:host([hidden]) { display: none; }
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+/* Icons come from the font claude.ai already loads; see ui.icon() for the fallback. */
+.ct-glyph {
+  font-family: var(--ct-icon-font);
+  font-feature-settings: "liga" 0;
+  font-optical-sizing: auto;
+  font-size: var(--ct-icon-size);
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1;
+  display: inline-block;
+}
+svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
+
+/* ---------------------------------------------------------------------- the pane --- */
+
 :host(.ct-panel-host) {
   position: fixed;
   top: var(--ct-pane-gap);
@@ -65,123 +106,17 @@
   z-index: 2147483000;
 }
 
-:host([data-theme="dark"]) {
-  --ct-accent-hover: #e08c6f;
-  --ct-accent-weak: #4a3128;
-  --ct-assistant: #8ba6ba;
-
-  --ct-bg: #262624;
-  --ct-canvas: #262624;
-  --ct-surface: #30302e;
-  --ct-surface-2: #3a3936;
-  --ct-surface-3: #45443f;
-  --ct-border: #403f3b;
-  --ct-border-strong: #57554f;
-  --ct-text: #f4f3ee;
-  --ct-text-2: #b8b5ac;
-  --ct-current: #ffffff;
-  --ct-current-soft: rgba(255, 255, 255, 0.22);
-  --ct-text-3: #8a877e;
-  --ct-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-  --ct-shadow-node: 0 1px 2px rgba(0, 0, 0, 0.25);
-  color-scheme: dark;
+/* The documents pane fades and settles in rather than sliding hard; match that. */
+:host(.ct-panel-host) .ct-root {
+  opacity: 0;
+  translate: 8px 0;
+  transition: opacity var(--ct-dur) var(--ct-ease), translate var(--ct-dur) var(--ct-ease);
 }
+:host(.ct-panel-host[data-open="true"]) .ct-root { opacity: 1; translate: 0 0; }
 
-:host([hidden]) { display: none; }
-
-*, *::before, *::after { box-sizing: border-box; }
-
-/* Our own display rules would otherwise beat the UA stylesheet's [hidden] rule. */
-[hidden] { display: none !important; }
-
-/* ----------------------------------------------------------------------- toggle --- */
-
-/* Docked into claude.ai's own header row, next to Share. */
-:host(.ct-header-host) {
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
+@media (prefers-reduced-motion: reduce) {
+  :host(.ct-panel-host) .ct-root { transition: none; translate: 0 0; }
 }
-
-/* Fallback when no header slot can be found: a floating pill. */
-:host(.ct-fab-host) {
-  position: fixed;
-  right: var(--ct-fab-right, 18px);
-  bottom: 18px;
-  z-index: 2147483000;
-  transition: right 180ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.ct-toggle {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: var(--ct-text-2);
-  font: inherit;
-  cursor: pointer;
-  transition: background 110ms ease, color 110ms ease, transform 110ms ease;
-}
-.ct-toggle:active { transform: scale(0.94); }
-.ct-toggle svg { width: 18px; height: 18px; flex: none; }
-
-/* Sized from the neighbouring header button so it lines up with whatever is there. */
-:host(.ct-header-host) .ct-toggle {
-  width: var(--ct-btn-size, 34px);
-  height: var(--ct-btn-size, 34px);
-  border-radius: var(--ct-btn-radius, 8px);
-}
-:host(.ct-header-host) .ct-toggle:hover { background: var(--ct-surface-3); color: var(--ct-text); }
-:host(.ct-header-host) .ct-toggle[aria-pressed="true"] {
-  background: var(--ct-accent-weak);
-  color: var(--ct-accent);
-}
-:host(.ct-header-host) .ct-toggle-label,
-:host(.ct-header-host) .ct-toggle-count { display: none; }
-
-:host(.ct-fab-host) .ct-toggle {
-  gap: 8px;
-  height: 40px;
-  padding: 0 14px 0 12px;
-  border: 1px solid var(--ct-border);
-  border-radius: 999px;
-  background: var(--ct-surface);
-  color: var(--ct-text);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.005em;
-  box-shadow: 0 2px 10px rgba(20, 20, 19, 0.1);
-}
-:host(.ct-fab-host) .ct-toggle:hover { background: var(--ct-surface-2); border-color: var(--ct-border-strong); }
-:host(.ct-fab-host) .ct-toggle[aria-pressed="true"] {
-  background: var(--ct-accent);
-  border-color: var(--ct-accent);
-  color: #fff;
-}
-:host(.ct-fab-host) .ct-toggle-dot { display: none; }
-
-.ct-toggle-count {
-  font-variant-numeric: tabular-nums;
-  font-size: 12px;
-  color: var(--ct-text-3);
-}
-.ct-toggle[aria-pressed="true"] .ct-toggle-count { color: rgba(255, 255, 255, 0.8); }
-
-/* Quiet hint that this conversation has branches worth opening the panel for. */
-.ct-toggle-dot {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--ct-accent);
-  box-shadow: 0 0 0 2px var(--ct-bg);
-}
-
-/* -------------------------------------------------------------------- panel shell --- */
 
 .ct-root {
   position: relative;
@@ -189,8 +124,7 @@
   flex-direction: column;
   height: 100%;
   background: var(--ct-bg);
-  border: 1px solid var(--ct-border);
-  border-radius: var(--ct-pane-radius);
+  border-radius: var(--ct-radius);
   box-shadow: var(--ct-shadow);
   font-size: 13px;
   line-height: 1.5;
@@ -205,7 +139,6 @@
   height: 100%;
   cursor: col-resize;
   z-index: 5;
-  background: transparent;
 }
 .ct-resize::after {
   content: "";
@@ -215,69 +148,161 @@
   border-radius: 2px;
   background: var(--ct-accent);
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity var(--ct-dur-snap) var(--ct-ease);
 }
 .ct-resize:hover::after, .ct-resize.is-active::after { opacity: 0.55; }
 
-/* ------------------------------------------------------------------------ header --- */
+/* ------------------------------------------------------------------------ toggle --- */
 
-.ct-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 14px 12px 12px 16px;
-  border-bottom: 1px solid var(--ct-border);
-  background: var(--ct-bg);
+:host(.ct-header-host) {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
 }
-.ct-head-text { flex: 1; min-width: 0; }
-.ct-title {
-  margin: 0;
-  font-family: var(--ct-font-serif);
-  font-size: 17px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+
+:host(.ct-fab-host) {
+  position: fixed;
+  right: var(--ct-fab-right, 18px);
+  bottom: 18px;
+  z-index: 2147483000;
+  transition: right var(--ct-dur) var(--ct-ease);
+}
+
+.ct-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--ct-text-2);
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--ct-dur-snap) var(--ct-ease), color var(--ct-dur-snap) var(--ct-ease);
+}
+.ct-toggle svg { width: 18px; height: 18px; flex: none; }
+
+:host(.ct-header-host) .ct-toggle {
+  width: var(--ct-btn-size, 34px);
+  height: var(--ct-btn-size, 34px);
+  border-radius: var(--ct-btn-radius, 8px);
+}
+:host(.ct-header-host) .ct-toggle:hover { background: var(--ct-fill); color: var(--ct-text); }
+:host(.ct-header-host) .ct-toggle[aria-pressed="true"] {
+  background: var(--ct-fill-strong);
   color: var(--ct-text);
 }
-.ct-subtitle {
-  margin: 3px 0 0;
-  font-size: 12px;
-  color: var(--ct-text-3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+:host(.ct-header-host) .ct-toggle-label,
+:host(.ct-header-host) .ct-toggle-count { display: none; }
+
+:host(.ct-fab-host) .ct-toggle {
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px 0 12px;
+  border: 1px solid var(--ct-border);
+  border-radius: 999px;
+  background: var(--ct-surface);
+  color: var(--ct-text);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--ct-shadow-node);
 }
-.ct-head-actions { display: flex; gap: 2px; flex: none; }
+:host(.ct-fab-host) .ct-toggle:hover { background: var(--ct-fill); }
+:host(.ct-fab-host) .ct-toggle[aria-pressed="true"] {
+  background: var(--ct-accent);
+  border-color: var(--ct-accent);
+  color: #fff;
+}
+:host(.ct-fab-host) .ct-toggle-dot { display: none; }
+
+.ct-toggle-count { font-size: 12px; color: var(--ct-text-3); font-variant-numeric: tabular-nums; }
+.ct-toggle-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ct-accent);
+  box-shadow: 0 0 0 2px var(--ct-bg);
+}
+
+/* ------------------------------------------------------------------------- chrome -- */
+
+.ct-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 8px 8px 14px;
+  flex: none;
+}
+
+.ct-tools { display: flex; align-items: center; gap: 6px; min-width: 0; }
 
 .ct-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: var(--ct-control);
+  height: var(--ct-control);
   padding: 0;
   border: none;
   border-radius: var(--ct-radius-sm);
   background: transparent;
   color: var(--ct-text-2);
   cursor: pointer;
-  transition: background 110ms ease, color 110ms ease;
+  transition: background var(--ct-dur-snap) var(--ct-ease), color var(--ct-dur-snap) var(--ct-ease);
 }
-.ct-icon-btn:hover { background: var(--ct-surface-3); color: var(--ct-text); }
+.ct-icon-btn:hover { background: var(--ct-fill); color: var(--ct-text); }
 .ct-icon-btn:disabled { opacity: 0.4; cursor: default; background: transparent; }
-.ct-icon-btn svg { width: 16px; height: 16px; }
-.ct-icon-btn.is-busy svg { animation: ct-spin 900ms linear infinite; }
+.ct-icon-btn svg { width: var(--ct-icon-size); height: var(--ct-icon-size); }
+.ct-icon-btn.is-busy .ct-glyph { animation: ct-spin 900ms linear infinite; }
 
 @keyframes ct-spin { to { transform: rotate(360deg); } }
 
-/* ------------------------------------------------------------------------- stats --- */
+.ct-segmented {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--ct-radius-sm);
+  background: var(--ct-fill);
+}
+.ct-segmented button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: calc(var(--ct-control) - 8px);
+  border: none;
+  border-radius: calc(var(--ct-radius-sm) - 2px);
+  background: transparent;
+  color: var(--ct-text-3);
+  cursor: pointer;
+  transition: background var(--ct-dur-snap) var(--ct-ease), color var(--ct-dur-snap) var(--ct-ease);
+}
+.ct-segmented button:hover { color: var(--ct-text); }
+.ct-segmented button[aria-pressed="true"] {
+  background: var(--ct-bg);
+  color: var(--ct-text);
+  box-shadow: var(--ct-shadow-node);
+}
+.ct-segmented svg { width: 15px; height: 15px; }
+
+.ct-zoom { display: inline-flex; align-items: center; gap: 2px; }
+.ct-zoom-value {
+  min-width: 40px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ct-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.ct-bar-end { margin-left: auto; display: inline-flex; align-items: center; gap: 2px; }
 
 .ct-stats {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--ct-border);
+  padding: 0 14px 10px;
+  flex: none;
 }
 .ct-stat {
   display: inline-flex;
@@ -285,67 +310,13 @@
   gap: 4px;
   padding: 3px 9px;
   border-radius: 999px;
-  background: var(--ct-surface-2);
+  background: var(--ct-fill);
   font-size: 11.5px;
-  color: var(--ct-text-2);
+  color: var(--ct-text-3);
 }
-.ct-stat b {
-  font-weight: 600;
-  color: var(--ct-text);
-  font-variant-numeric: tabular-nums;
-}
+.ct-stat b { font-weight: 600; color: var(--ct-text-2); font-variant-numeric: tabular-nums; }
 .ct-stat.is-accent { background: var(--ct-accent-weak); }
 .ct-stat.is-accent b { color: var(--ct-accent); }
-
-/* ----------------------------------------------------------------------- toolbar --- */
-
-.ct-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px 8px 16px;
-  border-bottom: 1px solid var(--ct-border);
-}
-.ct-segmented {
-  display: inline-flex;
-  padding: 2px;
-  border-radius: var(--ct-radius-sm);
-  background: var(--ct-surface-2);
-}
-.ct-segmented button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 24px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ct-text-3);
-  cursor: pointer;
-  transition: background 110ms ease, color 110ms ease;
-}
-.ct-segmented button:hover { color: var(--ct-text); }
-.ct-segmented button[aria-pressed="true"] {
-  background: var(--ct-surface);
-  color: var(--ct-text);
-  box-shadow: var(--ct-shadow-node);
-}
-.ct-segmented svg { width: 15px; height: 15px; }
-
-.ct-zoom {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  margin-left: auto;
-}
-.ct-zoom-value {
-  min-width: 40px;
-  text-align: center;
-  font-size: 11.5px;
-  color: var(--ct-text-3);
-  font-variant-numeric: tabular-nums;
-}
 
 /* ------------------------------------------------------------------------ canvas --- */
 
@@ -355,6 +326,7 @@
   min-height: 0;
   overflow: hidden;
   background: var(--ct-canvas);
+  border-top: 1px solid var(--ct-border);
   cursor: grab;
   touch-action: none;
 }
@@ -368,86 +340,69 @@
   will-change: transform;
 }
 .ct-edges { position: absolute; top: 0; left: 0; overflow: visible; pointer-events: none; }
-.ct-edge {
-  fill: none;
-  stroke: var(--ct-border-strong);
-  stroke-width: 1.5;
-  opacity: 0.75;
-}
-.ct-edge.is-path { stroke: var(--ct-accent); stroke-width: 2; opacity: 1; }
+.ct-edge { fill: none; stroke: var(--ct-hairline); stroke-width: 1.5; }
+.ct-edge.is-path { stroke: var(--ct-accent); stroke-width: 2; }
 
 .ct-nodes { position: absolute; top: 0; left: 0; }
 
 .ct-node {
   position: absolute;
   display: flex;
-  padding: 0;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
   overflow: hidden;
   border: 1px solid var(--ct-border);
-  border-radius: var(--ct-radius);
+  border-radius: var(--ct-radius-sm);
   background: var(--ct-surface);
-  box-shadow: var(--ct-shadow-node);
   font: inherit;
   text-align: left;
   cursor: pointer;
-  opacity: 0.62;
-  transition: box-shadow 120ms ease, border-color 120ms ease, opacity 120ms ease;
+  opacity: 0.6;
+  transition: box-shadow var(--ct-dur-snap) var(--ct-ease),
+              border-color var(--ct-dur-snap) var(--ct-ease),
+              opacity var(--ct-dur-snap) var(--ct-ease);
 }
+/* Claude marks a turn as yours by filling it, not by decorating it. */
+.ct-node[data-sender="human"] { background: var(--ct-fill); }
 .ct-node.is-path { opacity: 1; }
-.ct-node:hover { opacity: 1; border-color: var(--ct-border-strong); }
+.ct-node:hover { opacity: 1; }
 .ct-node.is-current {
   opacity: 1;
   border-color: var(--ct-current);
-  box-shadow: 0 0 0 2px var(--ct-current-soft), var(--ct-shadow-node);
+  box-shadow: 0 0 0 2px var(--ct-current-soft);
 }
 .ct-node.is-selected {
   opacity: 1;
   border-color: var(--ct-accent);
-  box-shadow: 0 0 0 2px var(--ct-accent-weak), var(--ct-shadow-node);
+  box-shadow: 0 0 0 2px var(--ct-accent-weak);
 }
 .ct-node:focus-visible { outline: 2px solid var(--ct-accent); outline-offset: 2px; }
 
-.ct-node-bar { flex: none; width: 3px; background: var(--ct-assistant); }
-.ct-node[data-sender="human"] .ct-node-bar { background: var(--ct-human); }
-
-.ct-node-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 7px 9px;
-}
 .ct-node-meta {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 10.5px;
   color: var(--ct-text-3);
 }
-.ct-node-role { font-weight: 600; }
-.ct-node[data-sender="human"] .ct-node-role { color: var(--ct-human); }
-.ct-node[data-sender="assistant"] .ct-node-role { color: var(--ct-assistant); }
+.ct-node-who { font-weight: 500; }
 .ct-node-variant {
   margin-left: auto;
-  padding: 1px 5px;
+  padding: 0 5px;
   border-radius: 999px;
-  background: var(--ct-surface-3);
-  font-size: 9.5px;
-  letter-spacing: 0.02em;
+  background: var(--ct-fill-strong);
+  font-size: 10px;
   font-variant-numeric: tabular-nums;
-  color: var(--ct-text-2);
+  color: var(--ct-text-3);
 }
 .ct-node-tag {
-  padding: 1px 5px;
+  padding: 0 5px;
   border-radius: 4px;
-  background: var(--ct-surface-2);
-  font-size: 9.5px;
-  letter-spacing: 0.02em;
+  background: var(--ct-fill);
+  font-size: 10px;
   color: var(--ct-text-3);
-  max-width: 70px;
+  max-width: 78px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -470,8 +425,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 17px;
-  height: 17px;
+  min-width: 16px;
+  height: 16px;
   padding: 0 4px;
   border-radius: 999px;
   border: 1px solid var(--ct-canvas);
@@ -497,21 +452,14 @@
   text-align: center;
   background: var(--ct-canvas);
 }
-.ct-state svg { width: 26px; height: 26px; color: var(--ct-text-3); }
-.ct-state h2 {
-  margin: 0;
-  font-family: var(--ct-font-serif);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--ct-text);
-}
-.ct-state p { margin: 0; max-width: 30ch; font-size: 12.5px; color: var(--ct-text-3); }
-.ct-state .ct-btn { margin-top: 4px; }
+.ct-state .ct-glyph, .ct-state svg { font-size: 22px; width: 22px; height: 22px; color: var(--ct-text-3); }
+.ct-state h2 { margin: 0; font-size: 14px; font-weight: 500; color: var(--ct-text); }
+.ct-state p { margin: 0; max-width: 32ch; font-size: 12.5px; color: var(--ct-text-3); }
 
 .ct-spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--ct-border-strong);
+  border: 2px solid var(--ct-hairline);
   border-top-color: var(--ct-accent);
   border-radius: 50%;
   animation: ct-spin 700ms linear infinite;
@@ -521,25 +469,22 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 30px;
+  height: var(--ct-control);
+  margin-top: 4px;
   padding: 0 12px;
-  border: 1px solid var(--ct-border-strong);
+  border: 1px solid var(--ct-border);
   border-radius: var(--ct-radius-sm);
   background: var(--ct-surface);
   color: var(--ct-text);
   font: inherit;
   font-size: 12.5px;
   cursor: pointer;
-  transition: background 110ms ease;
+  transition: background var(--ct-dur-snap) var(--ct-ease);
 }
-.ct-btn:hover { background: var(--ct-surface-2); }
-.ct-btn svg { width: 14px; height: 14px; }
-.ct-btn.is-primary {
-  background: var(--ct-accent);
-  border-color: var(--ct-accent);
-  color: #fff;
-}
-.ct-btn.is-primary:hover { background: var(--ct-accent-hover); }
+.ct-btn:hover { background: var(--ct-fill); }
+.ct-btn.is-primary { background: var(--ct-accent); border-color: var(--ct-accent); color: #fff; }
+.ct-btn.is-primary:hover { filter: brightness(1.06); }
+.ct-btn .ct-glyph, .ct-btn svg { font-size: 14px; width: 14px; height: 14px; }
 
 /* ------------------------------------------------------------------------ detail --- */
 
@@ -548,24 +493,17 @@
   flex-direction: column;
   max-height: 46%;
   border-top: 1px solid var(--ct-border);
-  background: var(--ct-surface);
+  background: var(--ct-bg);
 }
 .ct-detail[hidden] { display: none; }
 .ct-detail-head {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 10px 9px 16px;
-  border-bottom: 1px solid var(--ct-border);
+  padding: 6px 8px 6px 14px;
+  flex: none;
 }
-.ct-detail-role {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.ct-detail-role[data-sender="human"] { color: var(--ct-human); }
-.ct-detail-role[data-sender="assistant"] { color: var(--ct-assistant); }
+.ct-detail-who { font-size: 12px; font-weight: 500; color: var(--ct-text-2); }
 .ct-detail-time { font-size: 11.5px; color: var(--ct-text-3); }
 .ct-detail-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; }
 
@@ -576,7 +514,7 @@
   margin-left: auto;
   padding: 1px;
   border-radius: 999px;
-  background: var(--ct-surface-2);
+  background: var(--ct-fill);
 }
 .ct-variant-nav span {
   padding: 0 6px;
@@ -596,37 +534,29 @@
   color: var(--ct-text-2);
   cursor: pointer;
 }
-.ct-variant-nav button:hover:not(:disabled) { background: var(--ct-surface-3); color: var(--ct-text); }
+.ct-variant-nav button:hover:not(:disabled) { background: var(--ct-fill-strong); color: var(--ct-text); }
 .ct-variant-nav button:disabled { opacity: 0.35; cursor: default; }
 .ct-variant-nav svg { width: 12px; height: 12px; }
 
 .ct-detail-body {
   overflow: auto;
-  padding: 12px 16px 16px;
+  padding: 4px 14px 14px;
   scrollbar-width: thin;
-  scrollbar-color: var(--ct-border-strong) transparent;
+  scrollbar-color: var(--ct-hairline) transparent;
 }
 .ct-detail-text {
   margin: 0;
-  font-family: inherit;
   font-size: 12.5px;
   line-height: 1.6;
   color: var(--ct-text);
   white-space: pre-wrap;
   word-break: break-word;
 }
-.ct-detail-note {
-  margin: 0 0 10px;
-  font-size: 12px;
-  color: var(--ct-text-3);
-  font-style: italic;
-}
-.ct-thinking { margin-top: 12px; border-top: 1px dashed var(--ct-border); padding-top: 10px; }
+.ct-detail-note { margin: 0 0 10px; font-size: 12px; color: var(--ct-text-3); }
+.ct-thinking { margin-top: 12px; border-top: 1px solid var(--ct-border); padding-top: 10px; }
 .ct-thinking summary {
   cursor: pointer;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 11.5px;
   color: var(--ct-text-3);
   list-style: none;
 }
@@ -657,7 +587,7 @@
   font-size: 12px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 160ms ease, transform 160ms ease;
+  transition: opacity var(--ct-dur) var(--ct-ease), transform var(--ct-dur) var(--ct-ease);
   z-index: 10;
 }
 .ct-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
