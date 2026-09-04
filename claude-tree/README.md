@@ -16,17 +16,20 @@ through that tree, with a small `‹ 2/3 ›` switcher. This pane shows the whol
   alternatives.
 - **Message details** — click a node for the full text, timestamp, extended thinking, tools
   used and attachment count, plus `‹ 2/3 ›` navigation between the variants at that fork.
-- **Find in chat** — jumps to the top of any message in the live conversation and flashes it:
-  scrolling to hunt it down if Claude has not rendered that far yet, and switching the chat onto
-  the right branch first if the message lives on a different one.
-- **Follows where you are** — the message you are currently reading is outlined in the tree, so
-  you always know your place. Every message holds that outline for a minimum run of scrolling, so
-  short prompts between long answers do not flicker past. The selected message's accent outline
-  takes precedence over it.
+- **Show in chat** — double-click any node, or use the one button in the drawer, to take the
+  chat to that message. It scrolls, hunting for the message if Claude has not rendered that far
+  yet; and when the message is on another branch it moves the conversation there first, so the
+  same button reads *Show this branch in the chat* and there is nothing else to find.
+- **Follows where you are** — whichever message crosses a line near the top of the window is
+  outlined in the tree, so you always know your place. Short turns from either side are matched
+  from the start of their text, so a "Thanks" is tracked as readily as a long answer. The
+  selected message's accent outline takes precedence.
 - **Keeps up on its own** — refreshes when you send a message, when Claude answers, and when an
   edit or a regeneration creates a new branch.
-- **Two directions** — top-to-bottom or left-to-right, with pan, zoom and a resizable pane.
-  Both preferences are remembered.
+- **Two directions** — top-to-bottom or left-to-right, with pan and zoom. The pane and the
+  message drawer are both resizable, and every preference is remembered.
+- **Sized to its content** — nodes show up to four lines of a message and no more, and a
+  one-line message takes one line's worth of space rather than being padded out to match.
 - **A real pane, not an overlay** — the page reserves width for it, so the chat reflows beside
   it instead of disappearing underneath.
 - **Built from Claude's own design system** — docked into Claude's header next to Share, shaped
@@ -60,15 +63,21 @@ npx web-ext run       # launch a scratch profile with the extension loaded
 | Action | How |
 | --- | --- |
 | Open / close the pane | The tree icon in Claude's header, the toolbar icon, or `Alt+Shift+T` |
+| Leave a conversation | Starting a new chat closes the pane and hides the button |
 | Pan | Drag the canvas, or scroll |
-| Zoom | `Ctrl`/`⌘` + scroll, trackpad pinch, or the `−` / `+` buttons |
-| Reset the view | The frame button in the toolbar, or double-click the canvas |
-| Select a message | Click a node; arrow keys walk parents, children and siblings |
-| Resize the pane | Drag its left edge |
+| Zoom | Trackpad pinch, `Ctrl`/`⌘` + scroll, or the `−` / `+` buttons |
+| Reset the view | The frame button, or double-click the canvas — press again to fit the whole tree |
+| Resize the message drawer | Drag its top edge |
+| Select a message | Click a node — click it again to close the drawer |
+| Take the chat to a message | Double-click a node, or *Show in chat* in the drawer |
+| Walk the tree | Arrow keys move between parents, children and siblings |
+| Resize the pane | Drag its left edge (the width is remembered) |
 | Reload the tree | The refresh button in the pane header (it also refreshes itself) |
 
-The tree reloads when you switch conversations, refreshes itself when you come back to the tab
-after being away for more than 30 seconds, and updates in place — keeping your view, zoom and
+The pane opens at 1:1, centred on whichever message the chat is currently showing, so it starts
+where you are; pressing reset a second time zooms out to fit the whole
+tree. The tree reloads when you switch conversations, refreshes itself when you come back to the
+tab after being away for more than 30 seconds, and updates in place — keeping your view, zoom and
 selection — whenever the chat changes.
 
 Matching a tree node to a message in the page is done on letters and digits only, so markdown,
@@ -120,11 +129,24 @@ would make fixed elements scroll away with the page. Closing the pane removes al
   pane falls back through several older request forms, and worst case shows only the visible
   path instead of the full tree — if you see one branch where the chat offers `‹ 2/3 ›`
   switchers, that fallback is what happened.
-- **It never writes to your conversations** — no messages, edits or deletions. The one thing it
-  does drive is Claude's own `‹ 2/3 ›` branch switcher, when *find in chat* needs the chat to be
-  showing a different branch. That control is matched by shape — a `n / m` readout flanked by
-  exactly two buttons, with `m` agreeing with the tree — so it cannot click something else by
-  mistake, and if no such control is found nothing is clicked and the pane says so.
+- **Branch switching is a real write.** Selecting a branch moves the conversation's current
+  message, using the endpoint claude.ai uses for its own `‹ 2/3 ›` control
+  (`PUT .../chat_conversations/{id}/current_leaf_message_uuid`). Nothing else is ever written:
+  no messages, edits or deletions. The in-page control is tried first, because when it works
+  the chat updates without a reload; the API is the fallback, and the page reloads afterwards
+  so Claude re-renders on the branch you picked — the pane reopens with it. The reload waits
+  until the move is actually readable, because the write is accepted before it has propagated,
+  and reloading into that gap is what leaves the chat showing the branch you just left.
+- **Two things are behind flags in `src/panel.js`**, not deleted: `SHOW_STATS` hides the
+  summary pills above the tree, and `SHOW_TOASTS` controls the pane's notifications. Toasts
+  are currently on, and now name the reason a branch switch failed rather than just that it
+  did; the pane also warns in the console when claude.ai returns a conversation flat that the
+  page is visibly branching.
+- **The pane steps aside for Claude's own overlays.** Dialogs are found by role; Claude's
+  in-chat find bar is not a dialog, so anything holding keyboard focus inside a very high
+  stacking layer counts too. The pane drops to just under whatever is on top — not to the back,
+  so it does not vanish behind the chat while a small find bar is open — and returns to the
+  front when it closes.
 - **The header button is placed against markup, not an API.** It anchors on Claude's own
   `wiggle-controls-actions-*` test ids and is re-inserted whenever Claude re-renders the header.
   If those disappear it falls back to locating the Share control by accessible name, and failing

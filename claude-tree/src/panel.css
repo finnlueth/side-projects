@@ -13,7 +13,7 @@
 
   /* --- claude.ai tokens, light fallbacks ------------------------------------------- */
   --ct-accent: hsl(var(--accent-brand, 15 63.1% 59.6%));
-  --ct-assistant: #6b7f8f;
+  --ct-user: #6b7f8f;
   --ct-bg: hsl(var(--bg-000, 0 0% 100%));
   --ct-canvas: hsl(var(--bg-100, 48 33.3% 97.1%));
   --ct-surface: hsl(var(--bg-000, 0 0% 100%));
@@ -48,6 +48,7 @@
   --ct-ease: var(--cds-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
   --ct-dur: var(--cds-dur-base, 0.18s);
   --ct-dur-snap: var(--cds-dur-snap, 0.12s);
+  --ct-dur-slow: var(--cds-dur-slow, 0.28s);
 
   /* Gap between the pane and the window edge — mirrored by PANE_GAP in content.js. */
   --ct-pane-gap: 8px;
@@ -60,7 +61,7 @@
 }
 
 :host([data-theme="dark"]) {
-  --ct-assistant: #8ba6ba;
+  --ct-user: #8fa8bb;
   --ct-bg: hsl(var(--bg-000, 60 2.1% 18.4%));
   --ct-canvas: hsl(var(--bg-100, 60 2.7% 14.5%));
   --ct-surface: hsl(var(--bg-000, 60 2.1% 18.4%));
@@ -81,6 +82,9 @@
 }
 
 :host([hidden]) { display: none; }
+
+/* claude.ai's own search and dialogs must come out on top of the pane. */
+:host(.ct-panel-host.ct-behind) { z-index: var(--ct-behind-z, 1); }
 
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -105,7 +109,7 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   top: var(--ct-pane-gap);
   right: var(--ct-pane-gap);
   bottom: var(--ct-pane-gap);
-  width: var(--ct-w, 470px);
+  width: var(--ct-w, 560px);
   max-width: calc(100vw - var(--ct-pane-gap) * 2);
   z-index: 2147483000;
 }
@@ -113,8 +117,9 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
 /* The documents pane fades and settles in rather than sliding hard; match that. */
 :host(.ct-panel-host) .ct-root {
   opacity: 0;
-  translate: 8px 0;
-  transition: opacity var(--ct-dur) var(--ct-ease), translate var(--ct-dur) var(--ct-ease);
+  translate: calc(100% + var(--ct-pane-gap)) 0;
+  transition: opacity var(--ct-dur) var(--ct-ease),
+              translate var(--ct-dur-slow) var(--ct-ease);
 }
 :host(.ct-panel-host[data-open="true"]) .ct-root { opacity: 1; translate: 0 0; }
 
@@ -352,6 +357,7 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   position: absolute;
   display: flex;
   flex-direction: column;
+  height: auto;
   gap: 3px;
   padding: 8px 10px;
   overflow: hidden;
@@ -389,12 +395,12 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   font-size: 10.5px;
   color: var(--ct-text-3);
 }
-/* Claude's system has no semantic colour for "the assistant", so the slate is ours;
-   "you" reuses the brand accent. */
-.ct-node-who { font-weight: 500; color: var(--ct-assistant); }
-.ct-node[data-sender="human"] .ct-node-who { color: var(--ct-accent); }
-.ct-detail-who { color: var(--ct-assistant); }
-.ct-detail-who[data-sender="human"] { color: var(--ct-accent); }
+/* Claude's turns take the brand accent; yours take the slate, which is ours — Claude's
+   system has no semantic colour for a speaker. */
+.ct-node-who { font-weight: 500; color: var(--ct-accent); }
+.ct-node[data-sender="human"] .ct-node-who { color: var(--ct-user); }
+.ct-detail-who { color: var(--ct-accent); }
+.ct-detail-who[data-sender="human"] { color: var(--ct-user); }
 .ct-node-variant {
   margin-left: auto;
   padding: 0 5px;
@@ -410,14 +416,14 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   background: var(--ct-fill);
   font-size: 10px;
   color: var(--ct-text-3);
-  max-width: 78px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .ct-node-text {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
   font-size: 11.5px;
@@ -497,22 +503,62 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
 /* ------------------------------------------------------------------------ detail --- */
 
 .ct-detail {
+  position: relative;
   display: flex;
   flex-direction: column;
-  max-height: 46%;
+  /* Until it is dragged the drawer is as tall as its content, capped at the default
+     maximum; dragging pins an explicit height and the message scrolls inside it. */
+  height: var(--ct-detail-h, auto);
+  max-height: var(--ct-detail-max, 46%);
   background: var(--ct-bg);
 }
 .ct-detail[hidden] { display: none; }
+.ct-detail-resize {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 9px;
+  cursor: row-resize;
+  z-index: 2;
+}
+.ct-detail-resize::after {
+  content: "";
+  position: absolute;
+  inset: 0 8px auto 8px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--ct-accent);
+  opacity: 0;
+  transition: opacity var(--ct-dur-snap) var(--ct-ease);
+}
+.ct-detail-resize:hover::after, .ct-detail-resize.is-active::after { opacity: 0.55; }
+
 .ct-detail-head {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px 6px 14px;
+  padding: 9px 8px 6px 14px;
   flex: none;
 }
 .ct-detail-who { font-size: 12px; font-weight: 500; }
-.ct-detail-time { font-size: 11.5px; color: var(--ct-text-3); }
-.ct-detail-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+/* The timestamp absorbs the squeeze so the action row keeps one line on a narrow pane. */
+.ct-detail-time {
+  font-size: 11.5px;
+  color: var(--ct-text-3);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ct-detail-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; flex: none; }
+.ct-goto {
+  height: var(--ct-control);
+  margin: 0 4px 0 0;
+  padding: 0 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
 
 .ct-variant-nav {
   display: inline-flex;

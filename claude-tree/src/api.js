@@ -15,6 +15,10 @@
    * fall back until one returns something with a `chat_messages` array.
    */
   const QUERIES = [
+    // Exactly what claude.ai's own client sends. `consistency=strong` matters here: the
+    // pane refetches immediately after moving a branch, and a relaxed read can still be
+    // serving the previous one.
+    'tree=True&rendering_mode=messages&render_all_tools=true&include_inline_comparison=true&consistency=strong',
     'tree=True&rendering_mode=messages&render_all_tools=true',
     'tree=True&rendering_mode=messages',
     'tree=True&rendering_mode=raw',
@@ -86,6 +90,8 @@
 
   /** Organisation uuid that last worked, so repeat loads skip the discovery step. */
   let knownOrgId = null;
+  /** Which query string last returned a conversation — useful when branches are missing. */
+  let lastQuery = null;
 
   /**
    * Load one conversation with its full message tree.
@@ -110,6 +116,7 @@
             const data = await requestJson(path);
             if (data && Array.isArray(data.chat_messages)) {
               knownOrgId = org;
+              lastQuery = query || '(no parameters)';
               return data;
             }
           } catch (err) {
@@ -139,5 +146,64 @@
     throw lastError ?? new ApiError('claude.ai did not return any messages for this conversation.', 0);
   }
 
-  CT.api = { fetchConversation, ApiError };
+  /**
+   * Point the conversation at a different message, which is what selecting a branch means.
+   *
+   * This is the same request claude.ai makes when you click its "‹ 2/3 ›" switcher:
+   *   PUT /api/organizations/{org}/chat_conversations/{id}/current_leaf_message_uuid
+   * Authentication is the session cookie the browser already attaches.
+   *
+   * @param {string} conversationId
+   * @param {string} leafId message the conversation should now end at
+   * @returns {Promise<{ok: boolean, reason?: string}>}
+   */
+  async function setCurrentLeaf(conversationId, leafId) {
+    const org = knownOrgId || readCookie('lastActiveOrg');
+    if (!org) return { ok: false, reason: 'no organisation id' };
+    if (!conversationId || !leafId) return { ok: false, reason: 'no conversation or message id' };
+
+    const url = new URL(
+      `/api/organizations/${org}/chat_conversations/${conversationId}/current_leaf_message_uuid`,
+      location.origin
+    ).href;
+
+    try {
+      const res = await fetch(url, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({ current_leaf_message_uuid: leafId }),
+      });
+      if (res.ok) return { ok: true };
+      return { ok: false, reason: `claude.ai answered HTTP ${res.status}` };
+    } catch (err) {
+      return { ok: false, reason: `request blocked (${err?.message || 'network error'})` };
+    }
+  }
+
+  /**
+   * Wait until the branch move is actually readable before anything reloads on it.
+   *
+   * `setCurrentLeaf` resolving only means the write was accepted. Reloading straight away
+   * races its propagation: claude.ai's own page fetches the conversation, is handed the
+   * previous leaf, and renders the branch you just moved away from — while this pane, which
+   * asks for a strongly consistent read, shows the new one. That is the split where the
+   * chat looks stale and a second manual refresh fixes it.
+   *
+   * @returns {Promise<boolean>} whether the new leaf became readable in time
+   */
+  async function confirmLeaf(conversationId, leafId, { attempts = 8, delay = 250 } = {}) {
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      try {
+        const data = await fetchConversation(conversationId);
+        if (data?.current_leaf_message_uuid === leafId) return true;
+      } catch {
+        // keep waiting; a failed read here is not a failed write
+      }
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+    return false;
+  }
+
+  CT.api = { fetchConversation, setCurrentLeaf, confirmLeaf, ApiError, describeLoad: () => lastQuery };
 })();

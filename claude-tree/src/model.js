@@ -194,36 +194,78 @@
   }
 
   /**
-   * Tidy tree layout.
+   * Tidy tree layout with variable node sizes.
    *
-   * Leaves are placed left to right along the "spread" axis; every parent is centred over
-   * its children. Because a node's spread coordinate always falls inside its own subtree's
-   * leaf span, and leaf spans are separated by `spreadGap`, boxes can never overlap.
+   * Leaves are placed one after another along the "spread" axis and every parent is centred
+   * over its children. Along the "depth" axis each level is one row, as tall as the tallest
+   * node on it, so a node showing one line does not force four lines of empty space on the
+   * rest of its row.
+   *
+   * Nodes cannot overlap: a parent is clamped into its own subtree's span, and on the rare
+   * occasion it is wider than that span the cursor is pushed out to reserve the difference.
    *
    * Coordinates are returned in an orientation-free (depth, spread) space; the caller maps
-   * them onto x/y.
+   * them onto x/y. Each node is annotated with `s`, `d` and its `sSize`/`dSize`.
    *
+   * @param {object[]} roots
+   * @param {{spreadOf: (node) => number, depthOf: (node) => number,
+   *          spreadGap: number, depthGap: number}} options
    * @returns {{spread: number, depth: number}} the extent of the laid-out tree
    */
-  function computeLayout(roots, { spreadSize, spreadGap, depthSize, depthGap }) {
-    const step = spreadSize + spreadGap;
+  function computeLayout(roots, { spreadOf, depthOf, spreadGap, depthGap }) {
+    if (!roots.length) return { spread: 0, depth: 0 };
+
+    // Row heights: every node at a given depth shares the tallest node's row.
+    const rows = [];
+    const measure = (node, depth) => {
+      rows[depth] = Math.max(rows[depth] ?? 0, depthOf(node));
+      for (const child of node.children) measure(child, depth + 1);
+    };
+    for (const root of roots) measure(root, 0);
+
+    const rowOffset = [];
+    let run = 0;
+    for (let i = 0; i < rows.length; i++) {
+      rowOffset[i] = run;
+      run += rows[i] + depthGap;
+    }
+
     let cursor = 0;
-    let lastLeaf = 0;
-    let maxDepth = 0;
+    let edge = 0;
 
     const place = (node, depth) => {
-      maxDepth = Math.max(maxDepth, depth);
-      node.d = depth * (depthSize + depthGap);
-      if (node.children.length === 0) {
+      node.d = rowOffset[depth];
+      node.dSize = depthOf(node);
+      node.sSize = spreadOf(node);
+
+      if (!node.children.length) {
         node.s = cursor;
-        lastLeaf = cursor;
-        cursor += step;
-        return;
+        cursor += node.sSize + spreadGap;
+        edge = Math.max(edge, node.s + node.sSize);
+        return { lo: node.s, hi: node.s + node.sSize };
       }
-      for (const child of node.children) place(child, depth + 1);
+
+      let lo = Infinity;
+      let hi = -Infinity;
+      for (const child of node.children) {
+        const span = place(child, depth + 1);
+        lo = Math.min(lo, span.lo);
+        hi = Math.max(hi, span.hi);
+      }
+
+      const centreOf = (child) => child.s + child.sSize / 2;
       const first = node.children[0];
       const last = node.children[node.children.length - 1];
-      node.s = (first.s + last.s) / 2;
+      const centre = (centreOf(first) + centreOf(last)) / 2;
+      node.s = Math.min(Math.max(centre - node.sSize / 2, lo), Math.max(lo, hi - node.sSize));
+
+      const overflow = node.s + node.sSize - hi;
+      if (overflow > 0) {
+        cursor += overflow; // reserve the extra room before the next subtree starts
+        hi = node.s + node.sSize;
+      }
+      edge = Math.max(edge, hi);
+      return { lo, hi };
     };
 
     for (const root of roots) {
@@ -231,12 +273,15 @@
       cursor += spreadGap; // extra air between disconnected roots
     }
 
-    if (!roots.length) return { spread: 0, depth: 0 };
-    return {
-      spread: lastLeaf + spreadSize,
-      depth: maxDepth * (depthSize + depthGap) + depthSize,
-    };
+    return { spread: edge, depth: run - depthGap };
   }
 
-  CT.model = { buildTree, computeLayout, snippet, collapse };
+  /** Follow a branch down to its most recent message — where selecting it should land. */
+  function deepestLeaf(node) {
+    let current = node;
+    while (current.children.length) current = current.children[current.children.length - 1];
+    return current;
+  }
+
+  CT.model = { buildTree, computeLayout, snippet, collapse, deepestLeaf };
 })();

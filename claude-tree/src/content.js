@@ -38,6 +38,7 @@
     shadow.append(button);
 
     toggle = { host, button, count: button.querySelector('.ct-toggle-count'), dot: button.querySelector('.ct-toggle-dot') };
+    host.hidden = !conversationIdFromLocation();
     describeToggle(null);
     placeToggle();
     syncToggle(panel.open, panel.width);
@@ -327,6 +328,83 @@
     return false;
   }
 
+  /* ---------------------------------------------------------------- overlays --- */
+
+  /**
+   * claude.ai's search and dialogs open in portals with a z-index of their own. The pane
+   * sits above ordinary page content, which would put it over them, so it steps down for
+   * as long as one is on screen.
+   */
+  const DIALOG_SELECTOR = '[role="dialog"], [aria-modal="true"], [role="search"]';
+  /** Layers at or above this are Claude's overlays, not its page furniture. */
+  const OVERLAY_Z = 500;
+
+  const isVisible = (el) => (el.checkVisibility ? el.checkVisibility() : el.offsetParent !== null);
+  const ours = (el) => el.closest('.ct-panel-host, .ct-toggle-host');
+
+  /** The stacking level of the nearest positioned ancestor that declares one. */
+  function layerZ(el) {
+    for (let node = el; node && node !== document.body; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      if (style.position === 'static') continue;
+      const z = Number(style.zIndex);
+      if (Number.isFinite(z)) return z;
+    }
+    return 0;
+  }
+
+  /**
+   * How high claude.ai is currently painting, if it is painting above the pane.
+   *
+   * Dialogs are found by role, but Claude's in-chat find bar is not a dialog, so anything
+   * holding keyboard focus inside a very high layer counts too — which is what an open
+   * search field always does. Returns 0 when nothing is above us.
+   */
+  function overlayLevel() {
+    let level = 0;
+
+    for (const el of document.querySelectorAll(DIALOG_SELECTOR)) {
+      if (ours(el) || !isVisible(el)) continue;
+      level = Math.max(level, layerZ(el) || OVERLAY_Z);
+    }
+
+    const focused = document.activeElement;
+    if (focused && !ours(focused)) {
+      const z = layerZ(focused);
+      if (z >= OVERLAY_Z) level = Math.max(level, z);
+    }
+    return level;
+  }
+
+  function watchOverlays() {
+    // Sit just under whatever is on top rather than dropping to the back, so the pane does
+    // not vanish behind the chat while a small find bar is open.
+    const check = () => {
+      const level = overlayLevel();
+      panel.setBehind(level ? Math.max(1, level - 1) : 0);
+    };
+
+    let frame = 0;
+    const schedule = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => { frame = 0; check(); });
+    };
+    new MutationObserver(schedule).observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributeFilter: ['role', 'aria-modal', 'hidden', 'data-state'],
+    });
+    // An overlay that only takes focus (Claude's find bar) shows up here and nowhere else.
+    document.addEventListener('focusin', schedule, true);
+    document.addEventListener('focusout', schedule, true);
+    document.addEventListener('keydown', schedule, true);
+
+    check();
+    return check;
+  }
+
+  const checkOverlays = watchOverlays();
+
   /* -------------------------------------------------------------- navigation --- */
 
   function conversationIdFromLocation() {
@@ -338,7 +416,14 @@
   function checkLocation() {
     if (location.href === lastHref) return;
     lastHref = location.href;
-    panel.setConversation(conversationIdFromLocation());
+
+    const conversation = conversationIdFromLocation();
+    panel.setConversation(conversation);
+
+    // Starting a new chat leaves nothing to map: close the pane and take the button away
+    // until there is a conversation again.
+    if (!conversation) panel.setOpen(false);
+    if (toggle) toggle.host.hidden = !conversation;
   }
 
   // claude.ai is a client-side-routed app, so there is no navigation event to hook;
@@ -347,6 +432,7 @@
   setInterval(() => {
     checkLocation();
     ensureTogglePlaced();
+    checkOverlays();
   }, 500);
 
   window.addEventListener('resize', () => {
@@ -363,6 +449,23 @@
 
   /* --------------------------------------------------------------------- go ---- */
 
+  /** A branch switch reloads the page; bring the pane straight back when it does. */
+  async function resumeAfterBranchSwitch() {
+    let stored;
+    try {
+      stored = await ext.storage.local.get('resume');
+      if (stored?.resume) await ext.storage.local.remove('resume');
+    } catch {
+      return;
+    }
+    const resume = stored?.resume;
+    if (!resume || Date.now() - resume.at > 30000) return;
+    if (resume.conversation !== conversationIdFromLocation()) return;
+    panel.setOpen(true);
+  }
+
   checkLocation();
-  mountToggle().catch((err) => console.error('[claude-tree] could not mount the toggle:', err));
+  mountToggle()
+    .then(resumeAfterBranchSwitch)
+    .catch((err) => console.error('[claude-tree] could not mount the toggle:', err));
 })();

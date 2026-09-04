@@ -10,18 +10,30 @@
   const PREFS_KEY = 'prefs';
   const MIN_WIDTH = 340;
   const MAX_WIDTH = 960;
-  const DEFAULT_WIDTH = 470;
+  /* Wide enough that two branches of 315px nodes stay legible without zooming out. */
+  const DEFAULT_WIDTH = 560;
   /** Page width to leave for the chat itself when the pane is docked. */
   const MIN_PAGE_WIDTH = 380;
+  /**
+   * Toast notifications are switched off. The calls are left where they are so turning
+   * them back on is a one-line change; failures are still reported through the pane itself.
+   */
+  const SHOW_TOASTS = true;
+  /** The summary pills above the tree are switched off; the code stays in place. */
+  const SHOW_STATS = false;
+  const MIN_DETAIL = 120;
+  /** Share of the pane the message drawer may take before it crowds out the tree. */
+  const MAX_DETAIL_RATIO = 0.8;
   const MIN_SCALE = 0.15;
-  /** Never auto-zoom below this — smaller than that, node text stops being legible. */
-  const READABLE_SCALE = 0.45;
   const MAX_SCALE = 2;
 
   /** Box + gap sizes per orientation, in the layout's (spread, depth) space. */
+  /* Nodes are a fixed 315 (vertical) or 371 (horizontal) wide; their height follows their
+     content, up to the four-line clamp. Only the gaps are configured here. */
+  const NODE_WIDTH = { vertical: 315, horizontal: 371 };
   const LAYOUT = {
-    vertical: { spread: 180, spreadGap: 22, depth: 72, depthGap: 32 },
-    horizontal: { spread: 70, spreadGap: 16, depth: 212, depthGap: 58 },
+    vertical: { spreadGap: 24, depthGap: 34 },
+    horizontal: { spreadGap: 18, depthGap: 60 },
   };
 
   /**
@@ -109,6 +121,7 @@
     left: glyph('<path d="M14.5 6l-6 6 6 6"/>'),
     right: glyph('<path d="M9.5 6l6 6-6 6"/>'),
     warning: glyph('<path d="M12 8.5v5M12 17h.01"/><circle cx="12" cy="12" r="9"/>'),
+    branch: glyph('<path d="M4 12h4.5c3 0 3-5 6-5H20M16.5 4.5 20 7l-3.5 2.5M8.5 12c3 0 3 5 6 5H20M16.5 14.5 20 17l-3.5 2.5"/>'),
     chat: glyph('<path d="M20 14.5a2.5 2.5 0 0 1-2.5 2.5H8l-4 3.5V6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5z"/>'),
   };
 
@@ -225,6 +238,14 @@
     }
   }
 
+  /** Reload onto the branch just selected, and bring the pane back with it. */
+  async function reopenAfterReload(conversationId) {
+    try {
+      await ext.storage.local.set({ resume: { conversation: conversationId, at: Date.now() } });
+    } catch { /* the pane simply stays closed after the reload */ }
+    location.reload();
+  }
+
   function savePrefs(prefs) {
     try {
       ext.storage.local.set({ [PREFS_KEY]: prefs });
@@ -281,6 +302,19 @@
       this.onTreeChange = null;
       this.toastTimer = 0;
       this.exitTimer = 0;
+      this.viewIsDefault = false;
+      this.centreOnCurrent = false;
+      this.detailHeight = 0;
+    }
+
+    /**
+     * Sit below claude.ai's own overlays while one is open (search, dialogs).
+     * @param {number} level stacking level to sit at, or 0 to return to the front
+     */
+    setBehind(level) {
+      if (!this.host) return;
+      this.host.classList.toggle('ct-behind', level > 0);
+      if (level > 0) this.host.style.setProperty('--ct-behind-z', String(level));
     }
 
     /** Widest the pane may get without crowding the chat out of the window. */
@@ -307,12 +341,14 @@
         this.orientation = prefs.orientation;
       }
       this.width = clamp(Number(prefs.width) || DEFAULT_WIDTH, MIN_WIDTH, this.maxWidth());
+      this.detailHeight = Number(prefs.detailHeight) || 0;
 
       discoverGlyphs();
       const { host, shadow } = await createHost('ct-panel-host', { hidden: true });
       this.host = host;
       this.shadow = shadow;
       host.style.setProperty('--ct-w', `${this.width}px`);
+      if (this.detailHeight) this.applyDetailHeight(this.detailHeight);
 
       shadow.append(this.buildDom());
       this.wireEvents();
@@ -337,7 +373,7 @@
               <button class="ct-icon-btn" data-action="zoom-out" title="Zoom out" aria-label="Zoom out">${ICON.minus}</button>
               <span class="ct-zoom-value" data-role="zoom">100%</span>
               <button class="ct-icon-btn" data-action="zoom-in" title="Zoom in" aria-label="Zoom in">${ICON.plus}</button>
-              <button class="ct-icon-btn" data-action="fit" title="Reset view" aria-label="Reset view">${ICON.fit}</button>
+              <button class="ct-icon-btn" data-action="fit" title="Reset view — press again to fit the whole tree" aria-label="Reset view">${ICON.fit}</button>
             </div>
           </div>
           <div class="ct-bar-end">
@@ -352,7 +388,7 @@
             <div class="ct-nodes" data-role="nodes"></div>
           </div>
           <div class="ct-state" data-role="state" hidden></div>
-          <div class="ct-toast" data-role="toast" role="status" aria-live="polite"></div>
+          <div class="ct-toast" data-role="toast" role="status" aria-live="${SHOW_TOASTS ? 'polite' : 'off'}"></div>
         </div>
         <section class="ct-detail" data-role="detail" hidden></section>
       `;
@@ -379,8 +415,19 @@
 
       nodes.addEventListener('click', (event) => {
         if (this.suppressClick) return;
-        const node = event.target.closest('.ct-node');
-        if (node) this.select(node.dataset.id, { center: false });
+        const el = event.target.closest('.ct-node');
+        if (!el) return;
+        // Clicking the open message again closes the drawer.
+        this.select(el.dataset.id === this.selectedId ? null : el.dataset.id, { center: false });
+      });
+
+      nodes.addEventListener('dblclick', (event) => {
+        const el = event.target.closest('.ct-node');
+        const node = el && this.tree?.nodes.get(el.dataset.id);
+        if (!node) return;
+        event.stopPropagation();
+        this.select(node.id, { center: false });
+        this.goToMessage(node);
       });
 
       nodes.addEventListener('keydown', (event) => this.handleNodeKey(event));
@@ -390,9 +437,18 @@
         if (button) this.handleDetailAction(button.dataset.detail);
       });
 
+      // Delegated: the drawer's contents are re-rendered on every selection.
+      detail.addEventListener('pointerdown', (event) => {
+        if (event.target.closest('.ct-detail-resize')) this.handleDetailResize(event);
+      });
+
       canvas.addEventListener('wheel', (event) => this.handleWheel(event), { passive: false });
       canvas.addEventListener('pointerdown', (event) => this.handlePanStart(event));
-      canvas.addEventListener('dblclick', () => this.resetView());
+      canvas.addEventListener('dblclick', (event) => {
+        if (event.target.closest('.ct-node')) return; // handled as "jump to this message"
+        if (this.viewIsDefault) this.fitAll();
+        else this.resetView();
+      });
 
       resize.addEventListener('pointerdown', (event) => this.handleResizeStart(event));
 
@@ -435,7 +491,7 @@
         case 'retry': this.load({ force: true }); break;
         case 'zoom-in': this.zoomBy(1.25); break;
         case 'zoom-out': this.zoomBy(1 / 1.25); break;
-        case 'fit': this.resetView(); break;
+        case 'fit': this.viewIsDefault ? this.fitAll() : this.resetView(); break;
         case 'orient': this.setOrientation(button.dataset.value); break;
         default: break;
       }
@@ -450,8 +506,8 @@
           this.toast(ok ? 'Message copied' : 'Could not copy message'));
         return;
       }
-      if (action === 'locate') {
-        this.locate(node);
+      if (action === 'goto') {
+        this.goToMessage(node);
         return;
       }
       if (action === 'prev' || action === 'next') {
@@ -462,22 +518,49 @@
     }
 
     /**
-     * Scroll the chat to a message. Claude renders lazily, so a message on the visible
-     * branch may still need hunting for — say so rather than blaming the branch.
+     * Take the chat to a message, whatever that requires.
+     *
+     * Scrolling is enough when the message is on the branch already showing. When it is not,
+     * Claude's own "‹ 2/3 ›" control is tried, and failing that the conversation's current
+     * message is moved through the API — which needs a reload for Claude to re-render.
      */
-    async locate(node) {
+    async goToMessage(node) {
       const depth = Math.max(1, (this.tree?.stats.depth ?? 1) - 1);
       this.toast('Looking for the message…', { sticky: true });
+
       const outcome = await CT.chat.revealNode(node, {
         onPath: node.onPath,
         position: node.depth / depth,
       });
-      this.toast({
-        found: 'Scrolled to the message',
-        switched: 'Switched the chat to that branch',
-        'off-path': "That branch isn't shown in the chat — use Claude's ‹ › switcher to reach it",
-        'not-found': 'Could not find that message in the page',
-      }[outcome]);
+      if (outcome === 'found' || outcome === 'switched') {
+        this.toast(outcome === 'switched'
+          ? 'Switched branch and scrolled to the message'
+          : 'Scrolled to the message');
+        if (outcome === 'switched') await this.load({ quiet: true });
+        return;
+      }
+      if (outcome === 'not-found') {
+        this.toast('Could not find that message in the page');
+        return;
+      }
+
+      // On another branch and no switcher to be found: move the conversation itself.
+      const leaf = CT.model.deepestLeaf(node);
+      const moved = await CT.api.setCurrentLeaf(this.conversationId, leaf.id);
+      if (moved.ok) {
+        // Only reload once the move is readable, or claude.ai reloads onto the old branch.
+        this.toast('Switching branch…', { sticky: true });
+        const settled = await CT.api.confirmLeaf(this.conversationId, leaf.id);
+        if (!settled) {
+          console.warn('[claude-tree] branch move accepted but not yet readable; ' +
+            'reloading anyway — the chat may need a further refresh');
+        }
+        await reopenAfterReload(this.conversationId);
+        return;
+      }
+      this.toast(`Could not reach that message — ${moved.reason}`);
+      console.warn('[claude-tree] branch switch failed:', moved.reason,
+        { conversation: this.conversationId, leaf: leaf.id });
     }
 
     handleNodeKey(event) {
@@ -519,6 +602,7 @@
       clearTimeout(this.exitTimer);
       if (open) {
         discoverGlyphs();
+        this.centreOnCurrent = true; // land on whatever the chat is showing
         this.host.hidden = false;
         // A frame with the pane rendered but not yet marked open, so the transition runs.
         requestAnimationFrame(() => { this.host.dataset.open = 'true'; });
@@ -548,7 +632,7 @@
       if (orientation !== 'vertical' && orientation !== 'horizontal') return;
       if (this.orientation === orientation) return;
       this.orientation = orientation;
-      savePrefs({ orientation, width: this.width });
+      savePrefs({ orientation, width: this.width, detailHeight: this.detailHeight });
       this.renderAll();
       this.resetView();
       this.ensureVisible(this.selectedId);
@@ -585,6 +669,7 @@
         this.error = null;
         this.loadedAt = Date.now();
         this.dirty = false;
+        void this.reportTreeShape(tree);
         this.selectedId = tree.nodes.has(previousSelection) ? previousSelection : null;
         if (!tree.nodes.has(this.currentId)) this.currentId = null;
         this.renderAll();
@@ -597,6 +682,26 @@
       } finally {
         this.el.root.querySelector('[data-action="refresh"]')?.classList.remove('is-busy');
       }
+    }
+
+    /**
+     * Note in the console what came back, and flag the one failure the pane cannot show:
+     * a conversation the page is branching but the API returned flat.
+     */
+    async reportTreeShape(tree) {
+      const via = CT.api.describeLoad();
+      if (tree.stats.forks === 0 && await CT.chat.hasVisibleSwitcher()) {
+        console.warn(
+          `[claude-tree] claude.ai returned ${tree.stats.messages} messages with no branches ` +
+          `via "${via}", but the page is showing a variant switcher. The conversation API is ` +
+          'only sending the branch on screen, so the pane cannot offer the others.'
+        );
+        this.toast('claude.ai returned only the visible branch');
+        return;
+      }
+      console.info(
+        `[claude-tree] ${tree.stats.messages} messages, ${tree.stats.forks} forks via "${via}"`
+      );
     }
 
     /* ----------------------------------------------------------------- render --- */
@@ -622,7 +727,7 @@
     }
 
     renderStats() {
-      const stats = this.tree?.stats;
+      const stats = SHOW_STATS ? this.tree?.stats : null;
       if (!stats) {
         this.el.stats.innerHTML = '';
         this.el.stats.hidden = true;
@@ -648,33 +753,48 @@
 
       const vertical = this.orientation === 'vertical';
       const conf = LAYOUT[this.orientation];
+      const nodeW = NODE_WIDTH[this.orientation];
+
+      // Pass one: put the cards in the document at their real width with the height left
+      // to the content, so each one can be measured rather than assumed.
+      this.el.nodes.innerHTML = this.tree.order
+        .map((node) => this.nodeHtml(node, nodeW))
+        .join('');
+      const cards = new Map();
+      for (const el of this.el.nodes.children) cards.set(el.dataset.id, el);
+      const heightOf = (node) => cards.get(node.id)?.offsetHeight || 40;
+
+      // Pass two: lay the tree out with those measurements.
       const extent = CT.model.computeLayout(this.tree.roots, {
-        spreadSize: conf.spread,
+        spreadOf: vertical ? () => nodeW : heightOf,
+        depthOf: vertical ? heightOf : () => nodeW,
         spreadGap: conf.spreadGap,
-        depthSize: conf.depth,
         depthGap: conf.depthGap,
       });
 
-      const nodeW = vertical ? conf.spread : conf.depth;
-      const nodeH = vertical ? conf.depth : conf.spread;
       const width = vertical ? extent.spread : extent.depth;
       const height = vertical ? extent.depth : extent.spread;
       this.content = { width, height };
 
-      const at = (node) => (vertical ? { x: node.s, y: node.d } : { x: node.d, y: node.s });
+      const box = (node) => vertical
+        ? { x: node.s, y: node.d, w: node.sSize, h: node.dSize }
+        : { x: node.d, y: node.s, w: node.dSize, h: node.sSize };
 
+      // Pass three: place them, and draw the edges between the boxes we just placed.
       const edges = [];
       const forks = [];
-      const cards = [];
-
       for (const node of this.tree.order) {
-        const pos = at(node);
-        cards.push(this.nodeHtml(node, pos, nodeW, nodeH));
+        const at = box(node);
+        const el = cards.get(node.id);
+        if (el) {
+          el.style.left = `${at.x}px`;
+          el.style.top = `${at.y}px`;
+        }
 
         if (node.children.length > 1) {
           const badge = vertical
-            ? { x: pos.x + nodeW / 2, y: pos.y + nodeH + 7 }
-            : { x: pos.x + nodeW + 7, y: pos.y + nodeH / 2 };
+            ? { x: at.x + at.w / 2, y: at.y + at.h + 7 }
+            : { x: at.x + at.w + 7, y: at.y + at.h / 2 };
           forks.push(
             `<span class="ct-fork" style="left:${badge.x}px;top:${badge.y}px;transform:translate(-50%,-50%)" ` +
             `title="${node.children.length} alternative replies">${node.children.length}</span>`
@@ -682,11 +802,11 @@
         }
 
         for (const child of node.children) {
-          const to = at(child);
+          const to = box(child);
           const onPath = node.onPath && child.onPath;
           const d = vertical
-            ? this.curve(pos.x + nodeW / 2, pos.y + nodeH, to.x + nodeW / 2, to.y, true)
-            : this.curve(pos.x + nodeW, pos.y + nodeH / 2, to.x, to.y + nodeH / 2, false);
+            ? this.curve(at.x + at.w / 2, at.y + at.h, to.x + to.w / 2, to.y, true)
+            : this.curve(at.x + at.w, at.y + at.h / 2, to.x, to.y + to.h / 2, false);
           edges.push(`<path class="ct-edge${onPath ? ' is-path' : ''}" d="${d}"/>`);
         }
       }
@@ -696,10 +816,10 @@
       this.el.edges.innerHTML = edges.join('');
       this.el.nodes.style.width = `${width}px`;
       this.el.nodes.style.height = `${height}px`;
-      this.el.nodes.innerHTML = cards.join('') + forks.join('');
+      this.el.nodes.insertAdjacentHTML('beforeend', forks.join(''));
     }
 
-    nodeHtml(node, pos, nodeW, nodeH) {
+    nodeHtml(node, nodeW) {
       const isPath = node.onPath;
       const isSelected = node.id === this.selectedId;
       const isCurrent = node.id === this.currentId;
@@ -713,12 +833,12 @@
           ? `<span class="ct-node-tag">${node.attachments} file${node.attachments === 1 ? '' : 's'}</span>`
           : '';
       const preview = node.preview
-        ? `<span class="ct-node-text">${esc(CT.model.snippet(node.preview, 120))}</span>`
+        ? `<span class="ct-node-text">${esc(CT.model.snippet(node.preview, 320))}</span>`
         : '<span class="ct-node-text ct-node-empty">Empty message</span>';
 
       return `<button type="button" class="ct-node${isPath ? ' is-path' : ''}${isCurrent ? ' is-current' : ''}${isSelected ? ' is-selected' : ''}"
         data-id="${esc(node.id)}" data-sender="${node.sender}"
-        style="left:${pos.x}px;top:${pos.y}px;width:${nodeW}px;height:${nodeH}px"
+        style="width:${nodeW}px"
         aria-pressed="${isSelected}">
         <span class="ct-node-meta"><span class="ct-node-who">${role}</span>${tag}${variant}</span>
         ${preview}
@@ -782,15 +902,17 @@
       const notes = [];
       if (node.tools.length) notes.push(`Tools used: ${node.tools.join(', ')}`);
       if (node.attachments) notes.push(`${node.attachments} attachment${node.attachments === 1 ? '' : 's'}`);
-      if (!node.onPath) notes.push('This message is not on the branch currently shown in the chat.');
+      // The label says what the button will actually do for this message.
+      const gotoLabel = node.onPath ? 'Show in chat' : 'Show this branch in the chat';
 
       detail.innerHTML = `
+        <div class="ct-detail-resize" role="separator" aria-orientation="horizontal" title="Drag to resize"></div>
         <div class="ct-detail-head">
           <span class="ct-detail-who" data-sender="${node.sender}">${node.sender === 'human' ? 'You' : 'Claude'}</span>
           <span class="ct-detail-time">${esc(formatTime(node.createdAt))}</span>
           ${nav}
           <div class="ct-detail-actions">
-            <button class="ct-icon-btn" data-detail="locate" title="Find this message in the chat" aria-label="Find this message in the chat">${icon('search')}</button>
+            <button class="ct-btn ct-goto" data-detail="goto" title="${gotoLabel}">${ICON.branch}${gotoLabel}</button>
             <button class="ct-icon-btn" data-detail="copy" title="Copy message text" aria-label="Copy message text">${icon('copy')}</button>
             <button class="ct-icon-btn" data-detail="close" title="Close details" aria-label="Close details">${icon('close')}</button>
           </div>
@@ -814,6 +936,12 @@
       }
       if (!id) return;
       this.el.nodes.querySelector(`.ct-node[data-id="${CSS.escape(id)}"]`)?.classList.add('is-current');
+
+      // On opening, bring the message the chat is on into the middle of the pane.
+      if (this.centreOnCurrent) {
+        this.centreOnCurrent = false;
+        this.centerOn(id);
+      }
     }
 
     select(id, { center = false } = {}) {
@@ -837,23 +965,24 @@
 
     /* ------------------------------------------------------------- pan / zoom --- */
 
-    applyView() {
+    applyView({ isDefault = false } = {}) {
+      this.viewIsDefault = isDefault;
       const { x, y, scale } = this.view;
       this.el.viewport.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
       this.el.zoom.textContent = `${Math.round(scale * 100)}%`;
     }
 
     /**
-     * Frame the tree at a readable scale.
+     * Frame the tree at 1:1.
      *
-     * Only the axis the tree spreads along is fitted to the panel; the axis it grows along
-     * is left to panning. Fitting both would shrink a long conversation — especially a
-     * left-to-right one in a narrow panel — until nothing could be read.
+     * Zooming out to fit would shrink a long conversation until nothing could be read, so
+     * the view starts at full size, centred on the tree if it fits and on the first message
+     * if it does not. Panning and the zoom controls take it from there.
      */
     resetView() {
       if (!this.content.width || !this.content.height) {
         this.view = { x: 0, y: 0, scale: 1 };
-        this.applyView();
+        this.applyView({ isDefault: true });
         return;
       }
       const vertical = this.orientation === 'vertical';
@@ -865,15 +994,37 @@
       const depth = vertical ? this.content.height : this.content.width;
       const depthBox = vertical ? box.height : box.width;
 
-      const scale = clamp(Math.min(1, (spreadBox - padding * 2) / spread), READABLE_SCALE, 1);
-      const alongSpread = (spreadBox - spread * scale) / 2;
-      const alongDepth = depth * scale <= depthBox - padding * 2
-        ? (depthBox - depth * scale) / 2
+      const root = this.tree?.roots[0];
+      const rootCentre = root ? root.s + root.sSize / 2 : spread / 2;
+      const alongSpread = spread <= spreadBox - padding * 2
+        ? (spreadBox - spread) / 2
+        : spreadBox / 2 - rootCentre;
+      const alongDepth = depth <= depthBox - padding * 2
+        ? (depthBox - depth) / 2
         : padding;
 
       this.view = vertical
-        ? { scale, x: alongSpread, y: alongDepth }
-        : { scale, x: alongDepth, y: alongSpread };
+        ? { scale: 1, x: alongSpread, y: alongDepth }
+        : { scale: 1, x: alongDepth, y: alongSpread };
+      this.applyView({ isDefault: true });
+    }
+
+    /** Zoom out far enough to see the whole tree at once. */
+    fitAll() {
+      if (!this.content.width || !this.content.height) return;
+      const box = this.el.canvas.getBoundingClientRect();
+      const padding = 24;
+      const scale = clamp(
+        Math.min((box.width - padding * 2) / this.content.width,
+                 (box.height - padding * 2) / this.content.height, 1),
+        MIN_SCALE,
+        1
+      );
+      this.view = {
+        scale,
+        x: (box.width - this.content.width * scale) / 2,
+        y: (box.height - this.content.height * scale) / 2,
+      };
       this.applyView();
     }
 
@@ -933,7 +1084,9 @@
       const box = this.el.canvas.getBoundingClientRect();
       // Trackpad pinch and ctrl/⌘ + wheel zoom; a plain wheel pans, like a canvas editor.
       if (event.ctrlKey || event.metaKey) {
-        const factor = Math.exp(-event.deltaY * 0.0022);
+        // A trackpad pinch arrives as many small deltas, a mouse wheel as few large ones;
+        // the clamp keeps the pinch responsive without a wheel notch jumping the view.
+        const factor = clamp(Math.exp(-event.deltaY * 0.01), 0.8, 1.25);
         this.zoomBy(factor, { x: event.clientX - box.left, y: event.clientY - box.top });
         return;
       }
@@ -982,6 +1135,39 @@
       this.el.canvas.addEventListener('pointercancel', up);
     }
 
+    /** Pin the drawer to a height; both properties move so the cap cannot block the drag. */
+    applyDetailHeight(height) {
+      const value = `${Math.round(height)}px`;
+      this.host.style.setProperty('--ct-detail-h', value);
+      this.host.style.setProperty('--ct-detail-max', value);
+    }
+
+    /** Drag the drawer's top edge to resize it. */
+    handleDetailResize(event) {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      const handle = event.target.closest('.ct-detail-resize');
+      const startY = event.clientY;
+      const startHeight = this.el.detail.getBoundingClientRect().height;
+      const limit = this.el.root.getBoundingClientRect().height * MAX_DETAIL_RATIO;
+      handle.classList.add('is-active');
+      handle.setPointerCapture(event.pointerId);
+
+      const move = (moveEvent) => {
+        this.detailHeight = clamp(startHeight + (startY - moveEvent.clientY), MIN_DETAIL, limit);
+        this.applyDetailHeight(this.detailHeight);
+        this.ensureVisible(this.selectedId);
+      };
+      const up = () => {
+        handle.removeEventListener('pointermove', move);
+        handle.removeEventListener('pointerup', up);
+        handle.classList.remove('is-active');
+        savePrefs({ orientation: this.orientation, width: this.width, detailHeight: this.detailHeight });
+      };
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', up);
+    }
+
     handleResizeStart(event) {
       if (event.button !== 0) return;
       event.preventDefault();
@@ -999,7 +1185,7 @@
         this.el.resize.removeEventListener('pointermove', move);
         this.el.resize.removeEventListener('pointerup', up);
         this.el.resize.classList.remove('is-active');
-        savePrefs({ orientation: this.orientation, width: this.width });
+        savePrefs({ orientation: this.orientation, width: this.width, detailHeight: this.detailHeight });
       };
       this.el.resize.addEventListener('pointermove', move);
       this.el.resize.addEventListener('pointerup', up);
@@ -1009,7 +1195,10 @@
 
     toast(message, { sticky = false } = {}) {
       const el = this.el.toast;
+      // The message is written either way, so turning notifications back on is the one
+      // flag and nothing else; it is simply never revealed while they are off.
       el.textContent = message;
+      if (!SHOW_TOASTS) return;
       el.classList.add('is-visible');
       clearTimeout(this.toastTimer);
       if (sticky) return;
