@@ -26,6 +26,10 @@
   --ct-border-strong: #cfcbbc;
   --ct-text: #1a1915;
   --ct-text-2: #55534c;
+  /* Outline for the message the chat is currently showing — neutral, so the accent
+     used for the selected message always reads as the stronger of the two. */
+  --ct-current: #1a1915;
+  --ct-current-soft: rgba(26, 25, 21, 0.16);
   --ct-text-3: #86837a;
   --ct-shadow: 0 4px 24px rgba(20, 20, 19, 0.10), 0 1px 2px rgba(20, 20, 19, 0.05);
   --ct-shadow-node: 0 1px 2px rgba(20, 20, 19, 0.06);
@@ -75,6 +79,8 @@
   --ct-border-strong: #57554f;
   --ct-text: #f4f3ee;
   --ct-text-2: #b8b5ac;
+  --ct-current: #ffffff;
+  --ct-current-soft: rgba(255, 255, 255, 0.22);
   --ct-text-3: #8a877e;
   --ct-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
   --ct-shadow-node: 0 1px 2px rgba(0, 0, 0, 0.25);
@@ -95,7 +101,6 @@
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-  margin: 0 2px;
 }
 
 /* Fallback when no header slot can be found: a floating pill. */
@@ -126,7 +131,7 @@
 :host(.ct-header-host) .ct-toggle {
   width: var(--ct-btn-size, 34px);
   height: var(--ct-btn-size, 34px);
-  border-radius: 8px;
+  border-radius: var(--ct-btn-radius, 8px);
 }
 :host(.ct-header-host) .ct-toggle:hover { background: var(--ct-surface-3); color: var(--ct-text); }
 :host(.ct-header-host) .ct-toggle[aria-pressed="true"] {
@@ -390,6 +395,11 @@
 }
 .ct-node.is-path { opacity: 1; }
 .ct-node:hover { opacity: 1; border-color: var(--ct-border-strong); }
+.ct-node.is-current {
+  opacity: 1;
+  border-color: var(--ct-current);
+  box-shadow: 0 0 0 2px var(--ct-current-soft), var(--ct-shadow-node);
+}
 .ct-node.is-selected {
   opacity: 1;
   border-color: var(--ct-accent);

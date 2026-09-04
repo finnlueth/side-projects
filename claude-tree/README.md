@@ -16,8 +16,12 @@ through that tree, with a small `‹ 2/3 ›` switcher. This pane shows the whol
   alternatives.
 - **Message details** — click a node for the full text, timestamp, extended thinking, tools
   used and attachment count, plus `‹ 2/3 ›` navigation between the variants at that fork.
-- **Find in chat** — jumps to and flashes the message in the live conversation when it is on
-  the branch currently on screen.
+- **Find in chat** — jumps to and flashes the message in the live conversation, scrolling to
+  hunt it down if Claude has not rendered that far yet.
+- **Follows where you are** — the message you are currently reading is outlined in the tree, so
+  you always know your place. The selected message's accent outline takes precedence over it.
+- **Keeps up on its own** — refreshes when you send a message, when Claude answers, and when an
+  edit or a regeneration creates a new branch.
 - **Two directions** — top-to-bottom or left-to-right, with pan, zoom and a resizable pane.
   Both preferences are remembered.
 - **A real pane, not an overlay** — the page reserves width for it, so the chat reflows beside
@@ -57,10 +61,16 @@ npx web-ext run       # launch a scratch profile with the extension loaded
 | Reset the view | The frame button in the toolbar, or double-click the canvas |
 | Select a message | Click a node; arrow keys walk parents, children and siblings |
 | Resize the pane | Drag its left edge |
-| Reload the tree | The refresh button in the header |
+| Reload the tree | The refresh button in the pane header (it also refreshes itself) |
 
-The tree reloads when you switch conversations, and refreshes itself when you come back to the
-tab after being away for more than 30 seconds.
+The tree reloads when you switch conversations, refreshes itself when you come back to the tab
+after being away for more than 30 seconds, and updates in place — keeping your view, zoom and
+selection — whenever the chat changes.
+
+Matching a tree node to a message in the page is done on letters and digits only, so markdown,
+punctuation and whitespace differences between the API text and the rendered page do not matter.
+If a message has not been rendered yet, *find in chat* walks the chat scroller until Claude
+renders it, starting from an estimate of where along the branch it sits.
 
 ## How it works
 
@@ -68,6 +78,7 @@ tab after being away for more than 30 seconds.
 | --- | --- |
 | `src/api.js` | Reads the conversation from claude.ai's own web API |
 | `src/model.js` | Turns the flat message list into a tree and lays it out |
+| `src/chat.js` | Locating messages in the page, reading position, change detection |
 | `src/panel.js` | The shadow-DOM side pane: rendering, pan/zoom, detail drawer |
 | `src/content.js` | Docks the toggle, reserves page width, follows client-side navigation |
 | `src/background.js` | Toolbar button, keyboard shortcut, and a fetch fallback |
@@ -95,10 +106,10 @@ would make fixed elements scroll away with the page. Closing the pane removes al
   path instead of the full tree — if you see one branch where the chat offers `‹ 2/3 ›`
   switchers, that fallback is what happened.
 - **Read-only.** It never writes to your conversations, so it cannot switch the chat to a
-  different branch. *Find in chat* can only reach messages on the branch already on screen;
-  use Claude's own `‹ ›` switchers to change branches.
-- **The header button is placed by inference.** Claude's header is not a stable API, so the
-  button is anchored by finding the Share control near the top of the window and is re-inserted
-  whenever Claude re-renders. If no such anchor exists, the button falls back to a floating pill
-  in the bottom-right corner rather than disappearing.
+  different branch. *Find in chat* can reach any message on the branch the chat is showing, but
+  not one on another branch — use Claude's own `‹ ›` switchers for that.
+- **The header button is placed against markup, not an API.** It anchors on Claude's own
+  `wiggle-controls-actions-*` test ids and is re-inserted whenever Claude re-renders the header.
+  If those disappear it falls back to locating the Share control by accessible name, and failing
+  that to a floating pill in the bottom-right corner — never to nothing.
 - Projects, artifacts and other non-chat pages have no tree to show.

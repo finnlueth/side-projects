@@ -18,6 +18,24 @@
     return `${flat.slice(0, max - 1).trimEnd()}…`;
   }
 
+  /**
+   * Strip markdown syntax for the one-line previews on tree nodes. The chat renders this
+   * away, so leaving `**` and `##` in would show the reader something they never saw.
+   * The detail drawer still shows the message exactly as it was sent.
+   */
+  function plainPreview(text) {
+    return String(text ?? '')
+      .replace(/```[\s\S]*?```/g, ' ')
+      .replace(/`([^`]*)`/g, '$1')
+      .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+      .replace(/^\s{0,3}>\s?/gm, '')
+      .replace(/^\s{0,3}(?:[-*+]|\d+\.)\s+/gm, '')
+      .replace(/(\*\*|__)(.*?)\1/g, '$2')
+      .replace(/(\*|_)([^*_\n]+)\1/g, '$2')
+      .replace(/~~(.*?)~~/g, '$1');
+  }
+
   function blocksOfType(blocks, type) {
     return blocks.filter((block) => block && block.type === type);
   }
@@ -49,8 +67,8 @@
       ...(Array.isArray(message.files) ? message.files : []),
     ];
 
-    let preview = body;
-    if (!preview && thinking) preview = thinking;
+    let preview = plainPreview(body);
+    if (!preview && thinking) preview = plainPreview(thinking);
     if (!preview && tools.length) preview = `Used ${tools.join(', ')}`;
     if (!preview && attachments.length) preview = `${attachments.length} attachment${attachments.length === 1 ? '' : 's'}`;
 

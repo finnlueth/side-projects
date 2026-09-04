@@ -43,6 +43,33 @@
     syncToggle(panel.open, panel.width);
   }
 
+  /**
+   * Claude's own header markup. Stable enough to prefer, not stable enough to rely on —
+   * `inferredHeaderSlot` covers it changing.
+   */
+  const HEADER = {
+    group: '[data-testid="wiggle-controls-actions-group"]',
+    share: '[data-testid="wiggle-controls-actions-share"]',
+    icon: '[data-testid="wiggle-controls-actions-toggle"], [data-cds-icon-only]',
+  };
+
+  /** Walk up from `el` until its parent is `ancestor`, so we insert at the right level. */
+  function childOf(ancestor, el) {
+    let node = el;
+    while (node && node.parentElement !== ancestor) node = node.parentElement;
+    return node;
+  }
+
+  function metricsFor(icon, share) {
+    const source = icon || share;
+    const rect = source?.getBoundingClientRect();
+    if (!rect?.height) return { size: 34, radius: '8px' };
+    return {
+      size: Math.min(48, Math.max(24, Math.round(rect.height))),
+      radius: icon ? getComputedStyle(icon).borderRadius : '8px',
+    };
+  }
+
   /** Accessible name of a control, however claude.ai happens to label it. */
   function controlName(el) {
     return (el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent || '')
@@ -51,13 +78,23 @@
   }
 
   /**
-   * Find where in claude.ai's header the button belongs: immediately before Share.
-   *
-   * Nothing about that header is a stable API, so this matches on the accessible name and
-   * on position near the top of the window rather than on class names, and gives up
-   * cleanly — `placeToggle` then falls back to a floating button.
+   * Fallback for when Claude's testids change: find the button belonging immediately before
+   * Share by accessible name and by sitting near the top of the window, never by class name.
+   * Gives up cleanly — `placeToggle` then falls back to a floating button.
    */
   function findHeaderSlot() {
+    return knownHeaderSlot() || inferredHeaderSlot();
+  }
+
+  function knownHeaderSlot() {
+    const group = document.querySelector(HEADER.group);
+    const share = group?.querySelector(HEADER.share);
+    const before = share && childOf(group, share);
+    if (!before) return null;
+    return { parent: group, before, ...metricsFor(group.querySelector(HEADER.icon), share) };
+  }
+
+  function inferredHeaderSlot() {
     const scopes = [
       document.querySelector('header'),
       document.querySelector('[role="banner"]'),
@@ -85,12 +122,39 @@
         }
         if (!node.parentElement) continue;
 
+        const neighbour = iconButtonMetrics(node.parentElement, el);
         return {
           parent: node.parentElement,
           before: node,
-          size: Math.min(44, Math.max(28, Math.round(rect.height))),
+          size: neighbour?.size ?? Math.min(44, Math.max(28, Math.round(rect.height))),
+          radius: neighbour?.radius ?? '8px',
         };
       }
+    }
+    return null;
+  }
+
+  /**
+   * Measure a square icon button already in the header row, so the tree icon takes exactly
+   * the same box. Share itself is a wide pill, so its width is no guide.
+   */
+  function iconButtonMetrics(row, share) {
+    for (const child of row.children) {
+      if (child.classList.contains('ct-toggle-host') || child.contains(share)) continue;
+      const control = child.matches('button, [role="button"]')
+        ? child
+        : child.querySelector('button, [role="button"]');
+      if (!control) continue;
+
+      const rect = control.getBoundingClientRect();
+      if (!rect.width || !rect.height) continue;
+      const ratio = rect.width / rect.height;
+      if (ratio < 0.8 || ratio > 1.3) continue; // not an icon button
+
+      return {
+        size: Math.min(48, Math.max(24, Math.round(rect.height))),
+        radius: getComputedStyle(control).borderRadius,
+      };
     }
     return null;
   }
@@ -114,6 +178,7 @@
     toggle.host.classList.remove('ct-fab-host');
     toggle.host.classList.add('ct-header-host');
     toggle.host.style.setProperty('--ct-btn-size', `${slot.size}px`);
+    toggle.host.style.setProperty('--ct-btn-radius', slot.radius);
     if (toggle.host.parentElement !== slot.parent || toggle.host.nextElementSibling !== slot.before) {
       slot.parent.insertBefore(toggle.host, slot.before);
     }
@@ -156,8 +221,41 @@
     toggle.button.setAttribute('aria-label', toggle.button.title);
   }
 
-  panel.onOpenChange = syncToggle;
+  panel.onOpenChange = (open, width) => {
+    syncToggle(open, width);
+    if (open) startWatching();
+    else stopWatching();
+  };
   panel.onStatsChange = describeToggle;
+
+  /* ------------------------------------------------------------ chat watching -- */
+
+  let reading = null;
+  let stopUpdates = null;
+
+  function startWatching() {
+    if (!reading) {
+      reading = CT.chat.trackReading((id) => panel.setCurrent(id));
+      panel.onTreeChange = (tree) => {
+        reading?.setNodes(tree ? tree.order.filter((node) => node.onPath) : []);
+      };
+      panel.onTreeChange(panel.tree);
+    }
+    if (!stopUpdates) {
+      // Refresh in place: no spinner, no lost view, no lost selection.
+      stopUpdates = CT.chat.watchForUpdates(() => {
+        if (panel.open && !document.hidden) panel.load({ quiet: true });
+      });
+    }
+  }
+
+  function stopWatching() {
+    reading?.stop();
+    reading = null;
+    panel.onTreeChange = null;
+    stopUpdates?.();
+    stopUpdates = null;
+  }
 
   /* -------------------------------------------------------------------- pane ---- */
 

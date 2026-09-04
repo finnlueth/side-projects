@@ -225,6 +225,7 @@
       this.content = { width: 0, height: 0 };
       this.onOpenChange = null;
       this.onStatsChange = null;
+      this.onTreeChange = null;
       this.toastTimer = 0;
     }
 
@@ -524,6 +525,7 @@
         this.loadedAt = Date.now();
         this.dirty = false;
         this.selectedId = tree.nodes.has(previousSelection) ? previousSelection : null;
+        if (!tree.nodes.has(this.currentId)) this.currentId = null;
         this.renderAll();
         if (isFirstRender) this.resetView();
       } catch (err) {
@@ -546,6 +548,7 @@
       this.renderDetail();
       this.renderState();
       this.onStatsChange?.(this.tree?.stats ?? null);
+      this.onTreeChange?.(this.tree);
     }
 
     renderHeader() {

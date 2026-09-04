@@ -10,13 +10,16 @@
 
   const CT = (globalThis.CT ||= {});
 
-  const MESSAGE_SELECTOR = [
+  /** One element per message on the branch the chat is showing. */
+  const ROW_SELECTOR = '[data-testid="transcript-row"]';
+  /** Older / alternative markup, in case Claude's transcript testids change. */
+  const FALLBACK_SELECTOR = [
     '[data-testid="user-message"]',
     '[data-testid="chat-message"]',
-    '[data-test-render-count]',
-    '.font-claude-message',
     '.font-claude-response',
+    '.font-claude-message',
   ].join(', ');
+  const MESSAGE_SELECTOR = `${ROW_SELECTOR}, ${FALLBACK_SELECTOR}`;
 
   /** How much of a message to match on, in comparable characters. */
   const NEEDLE_LENGTH = 48;
@@ -51,10 +54,20 @@
 
   function messageElements() {
     const scope = document.querySelector('main') || document.body;
-    const tagged = scope.querySelectorAll(MESSAGE_SELECTOR);
+    // Transcript rows are one-per-message and carry the sender, so prefer them outright.
+    const rows = scope.querySelectorAll(ROW_SELECTOR);
+    if (rows.length) return Array.from(rows);
+    const tagged = scope.querySelectorAll(FALLBACK_SELECTOR);
     if (tagged.length) return Array.from(tagged);
     // Claude's markup changed: sweep a bounded set of blocks instead of giving up.
     return Array.from(scope.querySelectorAll('p, div')).slice(0, 3000);
+  }
+
+  /** Claude tags each transcript row with who sent it — a free check against mismatches. */
+  function senderOf(el) {
+    const row = el.closest?.('[data-perf-row]');
+    const sender = row?.getAttribute('data-perf-row');
+    return sender === 'human' || sender === 'assistant' ? sender : null;
   }
 
   /** Claude may carry the message uuid in the DOM; these are the cheap shapes to test. */
@@ -75,6 +88,8 @@
     let best = null;
     let bestLength = Infinity;
     for (const el of messageElements()) {
+      const sender = senderOf(el);
+      if (sender && node.sender && sender !== node.sender) continue;
       const text = elementText(el);
       if (text.length >= bestLength || !text.includes(needle)) continue;
       best = el;
