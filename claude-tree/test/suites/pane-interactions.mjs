@@ -56,14 +56,17 @@ check('1 · a mouse wheel notch stays controlled', wheelNotch.after / wheelNotch
 await page.evaluate(`${S}.querySelector('[data-action="fit"]').click()`);
 await wait(200);
 
-// --- 3 · click the same node again to close the drawer ---------------------------
+// --- 3 · clicking a message keeps it open -----------------------------------------
+// It used to close again, which fought the double-click that shows it in the chat: the
+// first of the two clicks closed the drawer the second one needed. The canvas clears the
+// selection instead.
 await page.evaluate(`${S}.querySelector(${nodeSel(2)}).click()`);
 await wait(250);
 const opened = await page.evaluate(`!${S}.querySelector('.ct-detail').hidden`);
 await page.evaluate(`${S}.querySelector(${nodeSel(2)}).click()`);
 await wait(250);
-const closed = await page.evaluate(`${S}.querySelector('.ct-detail').hidden`);
-check('3 · clicking the open message again closes the drawer', opened && closed, { opened, closed });
+const stillOpen = await page.evaluate(`!${S}.querySelector('.ct-detail').hidden`);
+check('3 · clicking the open message leaves it open', opened && stillOpen, { opened, stillOpen });
 
 // --- 6 · double-click a node to jump to it ----------------------------------------
 await page.evaluate(() => { const s = window.__harness.scroller; s.scrollTop = 0; s.dispatchEvent(new Event('scroll')); });
@@ -160,6 +163,126 @@ check('5 · the pane returns to the front afterwards', layering.after === layeri
     held(shorter, narrow), { shorter, narrow });
   check('7 · and when the window grows back', held(framed, back), { framed, back });
   await fresh.screenshot({ path: `${OUT}/a1-resize.png` });
+  await fresh.close();
+}
+
+// --- 8 · double-clicking the canvas brings the selected message back ----------------
+// Panning around a large conversation loses sight of the message being worked with. A
+// double-click on the canvas returns to it, rather than re-framing the tree from its root.
+{
+  const fresh = await browser.newPage();
+  await fresh.setViewport({ width: 1500, height: 950, deviceScaleFactor: 1 });
+  fresh.on('pageerror', (e) => problems.push(e.message));
+  await fresh.goto('http://127.0.0.1:8765/chat/00000000-0000-4000-8000-0000000000ff?theme=dark',
+    { waitUntil: 'networkidle0' });
+  await wait(700);
+  await fresh.evaluate(() => document.querySelector('.ct-toggle-host').shadowRoot
+    .querySelector('.ct-toggle').click());
+  await wait(1200);
+
+  const offset = `(() => {
+    const canvas = ${S}.querySelector('.ct-canvas').getBoundingClientRect();
+    const el = ${S}.querySelector('.ct-node.is-selected');
+    if (!el) return null;
+    const box = el.getBoundingClientRect();
+    return { dx: Math.round((box.left + box.width / 2) - (canvas.left + canvas.width / 2)),
+             dy: Math.round((box.top + box.height / 2) - (canvas.top + canvas.height / 2)) };
+  })()`;
+  await fresh.evaluate(`${S}.querySelector(${nodeSel(9)}).click()`);
+  await wait(400);
+  // The drawer lies over the bottom of the canvas, so only the strip above it can be clicked.
+  const box = await fresh.evaluate(`(() => {
+    const b = ${S}.querySelector('.ct-canvas').getBoundingClientRect();
+    const d = ${S}.querySelector('.ct-detail');
+    const drawerTop = d && !d.hidden ? d.getBoundingClientRect().top : b.bottom;
+    return { x: b.x, y: b.y, w: b.width, h: b.height, free: drawerTop - b.y }; })()`);
+
+  // drag the canvas well away from it, staying clear of the drawer
+  await fresh.mouse.move(box.x + box.w - 24, box.y + box.free - 24);
+  await fresh.mouse.down();
+  await fresh.mouse.move(box.x + 24, box.y + 24, { steps: 10 });
+  await fresh.mouse.up();
+  await wait(400);
+  const panned = await fresh.evaluate(offset);
+
+  await fresh.mouse.click(box.x + box.w - 16, box.y + box.free * 0.5, { clickCount: 2 });
+  await wait(500);
+  const returned = await fresh.evaluate(offset);
+
+  check('8 · panning really did move the selection off centre',
+    panned && (Math.abs(panned.dx) > 40 || Math.abs(panned.dy) > 40), panned);
+  check('8 · double-clicking the canvas centres the selected message',
+    returned && Math.abs(returned.dx) <= 8 && Math.abs(returned.dy) <= 8, returned);
+  await fresh.screenshot({ path: `${OUT}/a2-recentre.png` });
+
+  // --- 9 · the canvas clears the selection, a message does not -----------------------
+  const selectedCount = `${S}.querySelectorAll('.ct-node.is-selected').length`;
+  const drawerShut = `(() => { const d = ${S}.querySelector('.ct-detail'); return !d || d.hidden; })()`;
+
+  await fresh.evaluate(`${S}.querySelector(${nodeSel(9)}).click()`);
+  await wait(300);
+  const one = await fresh.evaluate(selectedCount);
+  await fresh.evaluate(`${S}.querySelector(${nodeSel(9)}).click()`);
+  await wait(300);
+  const two = await fresh.evaluate(selectedCount);
+  check('9 · clicking a message keeps it selected', one === 1 && two === 1, { one, two });
+
+  await fresh.mouse.click(box.x + box.w - 16, box.y + box.free * 0.5);
+  await wait(700);   // past the pause that waits for a possible double-click
+  const cleared = await fresh.evaluate(selectedCount);
+  const shut = await fresh.evaluate(drawerShut);
+  check('9 · one click on the canvas clears it', cleared === 0 && shut, { cleared, shut });
+
+  // --- 10 · with nothing selected, the end of the current path -----------------------
+  const endOffset = `(() => {
+    const canvas = ${S}.querySelector('.ct-canvas').getBoundingClientRect();
+    const path = [...${S}.querySelectorAll('.ct-node.is-path')];
+    const el = path[path.length - 1];
+    if (!el) return null;
+    const b = el.getBoundingClientRect();
+    return { dx: Math.round((b.left + b.width / 2) - (canvas.left + canvas.width / 2)),
+             dy: Math.round((b.top + b.height / 2) - (canvas.top + canvas.height / 2)) };
+  })()`;
+  await fresh.mouse.move(box.x + box.w - 24, box.y + box.free - 24);
+  await fresh.mouse.down();
+  await fresh.mouse.move(box.x + 24, box.y + 24, { steps: 10 });
+  await fresh.mouse.up();
+  await wait(400);
+  const drifted = await fresh.evaluate(endOffset);
+  await fresh.mouse.click(box.x + box.w - 16, box.y + box.free * 0.5, { clickCount: 2 });
+  await wait(500);
+  const atEnd = await fresh.evaluate(endOffset);
+  check('10 · the pan moved the last message of the path off centre',
+    drifted && (Math.abs(drifted.dx) > 40 || Math.abs(drifted.dy) > 40), drifted);
+  check('10 · with nothing selected, double-click centres the end of the path',
+    atEnd && Math.abs(atEnd.dx) <= 8 && Math.abs(atEnd.dy) <= 8, atEnd);
+
+  // --- 11 · the drawer lies over the canvas -----------------------------------------
+  // It used to be a sibling of the canvas in the same column, so its height came out of the
+  // canvas: opening or closing it moved every message on screen.
+  const whereIsNode = `(() => {
+    const b = ${S}.querySelector(${nodeSel(2)}).getBoundingClientRect();
+    return { top: Math.round(b.top), left: Math.round(b.left) };
+  })()`;
+  const shut0 = await fresh.evaluate(whereIsNode);
+  await fresh.evaluate(`${S}.querySelector(${nodeSel(2)}).click()`);
+  await wait(500);
+  const open = await fresh.evaluate(whereIsNode);
+  const covering = await fresh.evaluate(`(() => {
+    const d = ${S}.querySelector('.ct-detail').getBoundingClientRect();
+    const c = ${S}.querySelector('.ct-canvas').getBoundingClientRect();
+    return { overlaps: d.top < c.bottom - 4, height: Math.round(d.height) };
+  })()`);
+  await fresh.mouse.click(box.x + box.w - 16, box.y + 40);
+  await wait(700);
+  const shut1 = await fresh.evaluate(whereIsNode);
+
+  check('11 · the drawer really is over the canvas, not below it',
+    covering.overlaps && covering.height > 40, covering);
+  check('11 · opening it leaves the tree where it was',
+    Math.abs(open.top - shut0.top) <= 2 && Math.abs(open.left - shut0.left) <= 2, { shut0, open });
+  check('11 · and so does closing it',
+    Math.abs(shut1.top - shut0.top) <= 2 && Math.abs(shut1.left - shut0.left) <= 2, { shut0, shut1 });
   await fresh.close();
 }
 

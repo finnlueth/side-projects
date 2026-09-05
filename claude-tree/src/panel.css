@@ -503,7 +503,14 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
 /* ------------------------------------------------------------------------ detail --- */
 
 .ct-detail {
-  position: relative;
+  /* Laid over the canvas rather than sharing the column with it. As a flex sibling the
+     drawer took its height out of the canvas, so opening or closing it moved every node on
+     screen — the tree jumped underneath whichever message was being read. */
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   /* Until it is dragged the drawer is as tall as its content, capped at the default
@@ -511,6 +518,7 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   height: var(--ct-detail-h, auto);
   max-height: var(--ct-detail-max, 46%);
   background: var(--ct-bg);
+  border-top: 1px solid var(--ct-border);
 }
 .ct-detail[hidden] { display: none; }
 .ct-detail-resize {

@@ -22,6 +22,8 @@
   /** The summary pills above the tree are switched off; the code stays in place. */
   const SHOW_STATS = false;
   const MIN_DETAIL = 120;
+  /** How long a click waits to see whether it is really the first half of a double-click. */
+  const DOUBLE_CLICK_MS = 250;
   /** Share of the pane the message drawer may take before it crowds out the tree. */
   const MAX_DETAIL_RATIO = 0.8;
   const MIN_SCALE = 0.15;
@@ -421,8 +423,10 @@
         if (this.suppressClick) return;
         const el = event.target.closest('.ct-node');
         if (!el) return;
-        // Clicking the open message again closes the drawer.
-        this.select(el.dataset.id === this.selectedId ? null : el.dataset.id, { center: false });
+        // Selecting only. Clicking the open message used to close the drawer again, which
+        // fought the double-click that shows the message in the chat: the first of the two
+        // clicks closed what the second one needed.
+        this.select(el.dataset.id, { center: false });
       });
 
       nodes.addEventListener('dblclick', (event) => {
@@ -448,8 +452,37 @@
 
       canvas.addEventListener('wheel', (event) => this.handleWheel(event), { passive: false });
       canvas.addEventListener('pointerdown', (event) => this.handlePanStart(event));
+      canvas.addEventListener('click', (event) => {
+        if (this.suppressClick) return;               // the end of a pan, not a click
+        if (event.target.closest('.ct-node')) return; // the nodes handle their own clicks
+        /*
+         * Held briefly, because the first half of a double-click is a click. Clearing the
+         * selection immediately would mean a double-click on the canvas could never act on a
+         * selected message — the click that starts it would have just thrown it away.
+         */
+        clearTimeout(this.deselectTimer);
+        this.deselectTimer = setTimeout(() => this.select(null), DOUBLE_CLICK_MS);
+      });
+
       canvas.addEventListener('dblclick', (event) => {
         if (event.target.closest('.ct-node')) return; // handled as "jump to this message"
+        clearTimeout(this.deselectTimer);             // this pair was not a deselect
+
+        // Bring the selected message back into view. After panning around a large
+        // conversation what is wanted is the message being worked with, not the whole tree
+        // re-framed from its root.
+        if (this.selectedId
+          && this.el.nodes.querySelector(`.ct-node[data-id="${CSS.escape(this.selectedId)}"]`)) {
+          this.centerOn(this.selectedId);
+          return;
+        }
+        // Nothing selected: go to where the conversation currently ends, which is what
+        // "back to where I was" means when no single message is in hand.
+        const last = this.currentPathLeaf();
+        if (last && this.el.nodes.querySelector(`.ct-node[data-id="${CSS.escape(last.id)}"]`)) {
+          this.centerOn(last.id);
+          return;
+        }
         if (this.viewIsDefault) this.fitAll();
         else this.resetView();
       });
@@ -596,6 +629,17 @@
       this.toast(`Could not reach that message — ${moved.reason}`);
       console.warn('[claude-tree] branch switch failed:', moved.reason,
         { conversation: this.conversationId, leaf: leaf.id });
+    }
+
+    /**
+     * The last message of the branch the pane marks as current.
+     *
+     * `order` is a pre-order walk, so the messages on the path come out in depth order and
+     * the last of them is the one the conversation currently ends on.
+     */
+    currentPathLeaf() {
+      const path = this.tree?.order.filter((node) => node.onPath);
+      return path && path.length ? path[path.length - 1] : null;
     }
 
     /** Resolves once a tree has loaded, so callers after a reload do not race it. */
