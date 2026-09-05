@@ -105,6 +105,15 @@ const CONVO={name:'Tidy tree layouts',current_leaf_message_uuid:id(25),chat_mess
   M(25,24,'assistant','With a fair die p(omega) = 1/6 for every outcome.'),
   // An edited prompt: a human sibling of message 3. Served only with promptfork=1, so the
   // shape of the conversation every other suite sees is unchanged.
+  // twins=1: three replies to the same prompt that open identically, as retried answers to
+  // "write a lorem ipsum paragraph" do. Nothing in the shared prefix tells the branches
+  // apart, so which one is on screen can only be known from the messages below them.
+  M(40,3,'assistant','Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),
+  M(41,40,'human','test 2'),
+  M(42,41,'assistant','Test 2 received again — everything is working on my end.'),
+  M(43,3,'assistant','Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),
+  M(44,43,'human','123'),
+  M(45,44,'assistant','Got it — though I am not sure what you need.'),
   M(30,2,'human','Rewrite that as pseudocode instead.'),
   M(31,30,'assistant','    place(node): for child in node.children: place(child); node.x = centre(children)')]};
 const SC=P.get('scenario')||'ok';
@@ -115,12 +124,18 @@ window.__api={
     this.reads++;
     if(SC==='error') return new Response('{}',{status:403});
     const copy=JSON.parse(JSON.stringify(CONVO));
+    // staleleaf=1: the conversation record keeps naming the branch that was showing before.
+    // Claude's own client rewrites the leaf to match what it displays, so a tree fetched
+    // right after a switch routinely still describes the branch just left.
+    if(P.get('staleleaf')==='1') copy.current_leaf_message_uuid=id(BRANCH_A[BRANCH_A.length-1]);
     if(STREAM_HIDDEN&&STREAMING!==null)
       copy.chat_messages=copy.chat_messages.filter(m=>m.uuid!==id(STREAMING));
     if(P.get('flat')==='1') copy.chat_messages=copy.chat_messages.filter(
       m=>![5,6,7].includes(parseInt(m.uuid.slice(0,8),10)));
     if(P.get('promptfork')!=='1') copy.chat_messages=copy.chat_messages.filter(
       m=>![30,31].includes(parseInt(m.uuid.slice(0,8),10)));
+    if(P.get('twins')!=='1') copy.chat_messages=copy.chat_messages.filter(
+      m=>![40,41,42,43,44,45].includes(parseInt(m.uuid.slice(0,8),10)));
     if(this.pendingLeaf){
       if(this.staleReads>0) this.staleReads--;            // still serving the old leaf
       else { copy.current_leaf_message_uuid=this.pendingLeaf;
@@ -132,6 +147,10 @@ window.__api={
 const BRANCH_A=[1,2,3,4,8,9,20,21,22,23,24,25],BRANCH_B=[1,2,3,5,6,7];
 // With promptfork=1 the fork is an edited prompt: the branches part at a *human* message.
 const PROMPT_FORK=P.get('promptfork')==='1',BRANCH_C=[1,2,30,31];
+// twins=1: message 3's replies are, in creation order, 4 · 5 · 40 · 43 — the last two
+// indistinguishable from each other by their opening words.
+const TWINS=P.get('twins')==='1';
+const TWIN_BRANCHES=[BRANCH_A,BRANCH_B,[1,2,3,40,41,42],[1,2,3,43,44,45]];
 const OTHER=()=>PROMPT_FORK?BRANCH_C:BRANCH_B;
 let variant=0;let PATH=BRANCH_A.slice();
 const byId=n=>CONVO.chat_messages.find(m=>m.uuid===id(n));
@@ -140,11 +159,21 @@ const H=n=>byId(n).sender==='human'?90:620;
 const tops=()=>{let y=0;return PATH.map(n=>{const t=y;y+=H(n);return t;});};
 const scroller=document.getElementById('scroller'),spacer=document.getElementById('spacer');
 const live=new Map();
-function setVariant(v){variant=Math.max(0,Math.min(1,v));PATH=(variant?OTHER():BRANCH_A).slice();
+function setVariant(v){
+  if(TWINS){ variant=Math.max(0,Math.min(TWIN_BRANCHES.length-1,v));PATH=TWIN_BRANCHES[variant].slice(); }
+  else variant=Math.max(0,Math.min(1,v)),PATH=(variant?OTHER():BRANCH_A).slice();
   CONVO.current_leaf_message_uuid=id(PATH[PATH.length-1]);
   for(const [i,el] of live){el.remove();}live.clear();render();
   // Claude scrolls the transcript to the end of a branch when it renders one, and keeps
   // doing so for a moment afterwards. A single scroll made while that is happening is undone.
+  // blankonswitch=1: the transcript is empty for a moment while the new branch renders.
+  // Claude does this, and while it lasts the rows line up with no branch at all, so the pane
+  // has only the conversation record to go on — and that still describes the old branch.
+  if(P.get('blankonswitch')==='1'){
+    const hold=[...live.keys()];
+    for(const i of hold){live.get(i).remove();live.delete(i);}
+    setTimeout(render,450);
+  }
   if(P.get('scrollonswitch')==='1'){
     const toEnd=()=>{scroller.scrollTop=scroller.scrollHeight;scroller.dispatchEvent(new Event('scroll'));};
     toEnd(); for(const d of [80,220,420,700]) setTimeout(toEnd,d);
@@ -178,15 +207,16 @@ function render(){
     bar.querySelectorAll('button').forEach(btn=>btn.addEventListener('pointerdown',()=>{
       window.__pressed=(window.__pressed||[]).concat(btn.dataset.testid); }));
     el.appendChild(bar);
-    if((n===4||n===5) && !PROMPT_FORK && P.get('switcher')!=='none'){
+    if((n===4||n===5||n===40||n===43) && !PROMPT_FORK && P.get('switcher')!=='none'){
       const mount=()=>{
         if(bar.querySelector('.switch')) return;
         const sw=document.createElement('div');sw.className='switch';
+        const total=TWINS?TWIN_BRANCHES.length:2;
         sw.innerHTML='<button data-testid="action-bar-previous-version" aria-label="Previous version"'
           +(variant===0?' disabled':'')+'>&lsaquo;</button>'
-          +'<span>'+(variant+1)+' / 2</span>'
+          +'<span>'+(variant+1)+' / '+total+'</span>'
           +'<button data-testid="action-bar-next-version" aria-label="Next version"'
-          +(variant===1?' disabled':'')+'>&rsaquo;</button>';
+          +(variant===total-1?' disabled':'')+'>&rsaquo;</button>';
         // Claude's controls key off the pointer sequence; a bare .click() must not work
         const bs=sw.querySelectorAll('button');
         if(P.get('deadswitch')!=='1'){

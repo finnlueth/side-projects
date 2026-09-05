@@ -18,7 +18,7 @@
    * Toast notifications are switched off. The calls are left where they are so turning
    * them back on is a one-line change; failures are still reported through the pane itself.
    */
-  const SHOW_TOASTS = true;
+  const SHOW_TOASTS = false;
   /** The summary pills above the tree are switched off; the code stays in place. */
   const SHOW_STATS = false;
   const MIN_DETAIL = 120;
@@ -463,14 +463,34 @@
         event.stopPropagation();
       });
 
-      // Re-fit if the panel is resized while a tree is on screen.
+      /*
+       * Hold the view still when the canvas changes size — the browser window, the pane's
+       * own width, or the drawer opening underneath it.
+       *
+       * The tree is drawn at a fixed offset inside the canvas, so a canvas that grows leaves
+       * it where it was: pinned towards the left edge with the new space all on one side.
+       * Moving the view by half the change keeps whatever was in the middle of the canvas in
+       * the middle of it, which for a tree that is centred keeps it exactly centred, and for
+       * one larger than the canvas keeps the reader looking at the same place instead of
+       * having the tree jump.
+       */
       if (typeof ResizeObserver === 'function') {
-        let firstObservation = true;
+        let previous = null;
         new ResizeObserver(() => {
-          if (firstObservation) { firstObservation = false; return; }
+          const { width, height } = canvas.getBoundingClientRect();
+          const last = previous;
+          previous = { width, height };
+          if (!last || !width || !height || !last.width || !last.height) return;
           if (this.status !== 'ready' || !this.open) return;
-          // Opening the detail drawer shrinks the canvas — keep the selection in view.
-          this.ensureVisible(this.selectedId);
+
+          this.view.x += (width - last.width) / 2;
+          this.view.y += (height - last.height) / 2;
+          // Resizing is not the reader taking the view over, so the default framing — and
+          // the fit button that toggles against it — survives one.
+          this.applyView({ isDefault: this.viewIsDefault });
+          // Nothing else: a resize must leave the view exactly where it was. Pulling the
+          // selected message back into view here made the whole tree jump to it whenever the
+          // window changed size, which is not what resizing a window is asking for.
         }).observe(canvas);
       }
 

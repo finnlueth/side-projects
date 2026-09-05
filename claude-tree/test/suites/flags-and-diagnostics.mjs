@@ -24,14 +24,16 @@ check('1 · summary pills are hidden', await page.evaluate(`(() => {
   return row.hidden && ${S}.querySelectorAll('.ct-stat').length === 0; })()`));
 check('1 · the tree itself is unaffected', await page.evaluate(`${S}.querySelectorAll('.ct-node').length >= 9`));
 
-// --- 2 · toasts back on ----------------------------------------------------------
+// --- 2 · toasts off, but still recorded -------------------------------------------
+// Notifications are switched off. The message is still written to the element, so what
+// happened stays readable for debugging and by the tests, but nothing appears on screen.
 await page.evaluate(`${S}.querySelector(${nodeSel(1)}).click()`);
 await wait(200);
 await page.evaluate(`${S}.querySelector('[data-detail="goto"]').click()`);
-await wait(400);                       // check while it is still on screen
-check('2 · toasts are visible again', await page.evaluate(`(() => {
+await wait(400);                       // would be on screen by now if they were on
+check('2 · toasts stay hidden but still record what happened', await page.evaluate(`(() => {
   const t = ${S}.querySelector('[data-role="toast"]');
-  return t.classList.contains('is-visible') && t.textContent.length > 0; })()`),
+  return !t.classList.contains('is-visible') && t.textContent.length > 0; })()`),
   await page.evaluate(`${S}.querySelector('[data-role="toast"]').textContent`));
 
 // --- 3 · diagnostics -------------------------------------------------------------

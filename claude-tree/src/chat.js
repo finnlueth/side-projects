@@ -149,6 +149,15 @@
   let candidates = [];
   /** Index of the branch the page appears to be showing. */
   let chosen = -1;
+  /**
+   * Branches that fit the rendered rows exactly as well as the chosen one.
+   *
+   * Sibling replies to the same prompt often begin with the same words, so until the messages
+   * below them are on screen there is genuinely nothing to tell their branches apart. Keeping
+   * the ties rather than pretending the winner is certain is what stops a message being
+   * declared missing because it sits on the other one.
+   */
+  let tied = [];
 
   /** @param {object[][]} paths every root-to-leaf path, most likely first */
   function setBranches(paths) {
@@ -199,16 +208,19 @@
     const numbered = rows.every((el) => rowIndex(el) !== null);
 
     let best = null;
+    const scored = [];
     for (const index of order) {
       const aligned = numbered
         ? fitByIndex(rows, candidates[index].entries)
         : fitBranch(rows, candidates[index].entries);
       if (!aligned) continue;
-      if (!best || aligned.score > best.score) best = { index, aligned };
-      if (aligned.exact && aligned.score >= rows.length) break; // nothing can beat this
+      scored.push({ index, score: aligned.score });
+      if (!best || aligned.score > best.aligned.score) best = { index, aligned };
     }
-    if (!best) { chosen = -1; return []; }
+    if (!best) { chosen = -1; tied = []; return []; }
     chosen = best.index;
+    tied = scored.filter((entry) => entry.score === best.aligned.score && entry.index !== chosen)
+      .map((entry) => entry.index);
     return best.aligned.pairs;
   }
 
@@ -355,9 +367,22 @@
     for (const row of rows) {
       if (row.node.id === node.id) return row.el;
     }
-    // A working alignment is authoritative: if the message is not in it, it is not on
-    // screen, and guessing by text here would hand back somebody else's row. Text is only
-    // for when there is no alignment at all.
+    /*
+     * A reading of the page that fits is normally authoritative. It is not when another
+     * branch fits exactly as well — two replies that open with the same words — because then
+     * the one picked may simply be the wrong half of the pair. Accept a row that an equally
+     * good reading places this message at, but only when the row's own text agrees, so this
+     * can never hand back an unrelated message.
+     */
+    for (const index of tied) {
+      const position = candidates[index]?.positions.get(node.id);
+      if (!Number.isInteger(position)) continue;
+      const el = rowAtIndex(position);
+      const needle = needleFor(node);
+      if (el && needle.length >= MIN_NEEDLE && textMatches(messageText(el), needle)) return el;
+    }
+
+    // Text is otherwise only for when there is no alignment at all.
     return rows.length ? null : findByText(node);
   }
 
@@ -856,19 +881,35 @@
 
       const siblings = fork.wanted.parent ? fork.wanted.parent.children : [];
       const want = siblings.indexOf(fork.wanted);
-      const from = switcher.index ?? siblings.indexOf(fork.showing);
-      if (want < 0 || from < 0) break;
+      if (want < 0) break;
 
-      const forward = want > from;
-      const presses = Math.max(1, Math.abs(want - from));
-
+      /*
+       * Step towards the variant that was asked for, reading Claude's own "2 / 3" after every
+       * press rather than working out the whole move in advance.
+       *
+       * Working it out in advance needs to know which variant is showing, and that cannot
+       * always be read from the page: sibling replies to the same prompt routinely begin with
+       * the same words, so unless the rows that differ happen to be on screen, one branch
+       * looks exactly like another. A move planned from the wrong starting point lands on a
+       * sibling of the branch that was wanted. The readout beside the control is authoritative
+       * about which variant is showing, and both it and the tree order variants by when they
+       * were made, so comparing the two says exactly which way to go — and asking again after
+       * each press means a wrong guess corrects itself instead of being carried through.
+       */
       let moved = 0;
-      for (let step = 0; step < presses; step += 1) {
+      let arrived = false;
+      let stalled = false;
+      for (let step = 0; step <= siblings.length && !stalled; step += 1) {
         // Re-resolve every time: the transcript recycles rows as it scrolls, and the control
         // belongs to the row rather than to the element that was showing it a moment ago.
         const live = await locateSwitcher((await rowAt(fork.index)) || row);
         if (!live) break;
 
+        const from = live.index ?? siblings.indexOf(fork.showing);
+        if (from < 0) break;
+        if (from === want) { arrived = true; break; } // already showing what was asked for
+
+        const forward = want > from;
         const button = forward ? live.next : live.prev;
         if (button.disabled || button.getAttribute('aria-disabled') === 'true') break;
 
@@ -891,14 +932,23 @@
             await settle();
             resetAlignment();
           }
+          stalled = true;
           break;
         }
 
         moved += 1;
-        if (displayedAt(fork.index) === fork.wanted) break;
       }
 
-      if (!moved) break;
+      /*
+       * Nothing to do at this fork because it already shows the variant wanted: the reading
+       * of which branch was on screen was wrong, not the request. Carry on to the next fork
+       * rather than abandoning the whole thing — that reading is exactly what fails when
+       * sibling replies begin with the same words.
+       */
+      if (!moved) {
+        if (arrived) continue;
+        break;
+      }
       switched = true;
     }
 
@@ -909,8 +959,11 @@
   function branchPosition(node) {
     if (!node) return null;
     if (chosen < 0) alignRows();
-    const position = candidates[chosen]?.positions.get(node.id);
-    return Number.isInteger(position) ? position : null;
+    for (const index of [chosen, ...tied]) {
+      const position = candidates[index]?.positions.get(node.id);
+      if (Number.isInteger(position)) return position;
+    }
+    return null;
   }
 
   async function huntByIndex(node, scroller) {
@@ -1090,10 +1143,19 @@
    * @returns {Promise<'found'|'switched'|'off-path'|'not-found'>}
    */
   async function revealNode(node, { onPath, position, allowSwitch = true } = {}) {
-    // Sweep the scroller only for a message that should be on the branch already showing.
-    // For one the tree places elsewhere, a cheap look is enough before switching — sweeping
-    // the whole conversation just to fail first costs a second and a half.
-    let el = onPath ? await hunt(node, position) : findElement(node);
+    /*
+     * Sweep the scroller for a message that should be on the branch already showing. For one
+     * the tree places elsewhere, a cheap look is enough before switching — sweeping the whole
+     * conversation just to fail first costs a second and a half.
+     *
+     * When switching is not allowed there is nothing to save the sweep for, so always look
+     * properly. This is the case that made showing a message take two presses: landing after
+     * a switch, the tree still places the message on the branch it came from, so the cheap
+     * look was used — and Claude had just scrolled to the end of the branch, taking the
+     * message out of the page entirely. Nothing was found, the landing gave up, and only a
+     * second press, by which time everything agreed, actually scrolled anywhere.
+     */
+    let el = (onPath || !allowSwitch) ? await hunt(node, position) : findElement(node);
     if (el) {
       await landAt(node, position);
       return 'found';
@@ -1106,6 +1168,14 @@
       resetAlignment();
       await landAt(node, position);
       return 'switched';
+    }
+
+    // Nothing was switched. Before giving up on a message the tree places on another branch,
+    // look for it properly — when sibling branches read alike, the branch it was thought to
+    // be on can simply have been wrong, and the message is in the page after all.
+    if (!onPath && await hunt(node, position)) {
+      await landAt(node, position);
+      return 'found';
     }
 
     return onPath ? 'not-found' : 'off-path';

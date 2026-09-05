@@ -137,6 +137,72 @@ const goTo = async (page, id, ms = 6000) => {
   await page.close();
 }
 
+// --- 3c · one press, not two --------------------------------------------------------
+// Showing a message on another branch is a single action. It used to take two presses: the
+// first switched the branch, but the conversation record still described the branch just
+// left, so the landing took the message to be elsewhere and only glanced at the page instead
+// of looking properly — and Claude had by then scrolled the message out of it.
+{
+  const page = await open('hoverswitch=1&scrollonswitch=1&staleleaf=1&blankonswitch=1');
+  await page.evaluate(`${S}.querySelector('${nodeSel(6)}').click()`);
+  await wait(300);
+  await page.evaluate(`${S}.querySelector('[data-detail="goto"]').click()`);   // one press only
+  await wait(7000);
+  const after = await page.evaluate(`(() => {
+    const s = window.__harness.scroller;
+    const target = [...document.querySelectorAll('.row')].find((r) =>
+      r.textContent.includes('What does contour tracking buy me'));
+    return {
+      variant: window.__harness.variant,
+      targetOffset: target ? Math.round(target.getBoundingClientRect().top - s.getBoundingClientRect().top) : null,
+      atEnd: Math.abs(s.scrollTop - (s.scrollHeight - s.clientHeight)) < 60 };
+  })()`);
+  check('3c · a single press both switches and scrolls, with a lagging record',
+    after.variant === 1 && after.targetOffset !== null
+    && after.targetOffset >= -8 && after.targetOffset < 120, after);
+  await page.close();
+}
+
+// --- 3d · sibling replies that read alike --------------------------------------------
+// Retried answers to the same prompt begin with the same words, so from the shared part of
+// the conversation one branch looks exactly like another — and the conversation record, which
+// breaks the tie, is routinely a step behind. The pane can therefore believe a different
+// branch is showing than the one that is. Asking for a message on the branch already showing
+// then used to press a variant control anyway, moving the chat onto a sibling subtree.
+{
+  const page = await open('twins=1&staleleaf=1&hoverswitch=1&scrollonswitch=1');
+  await page.evaluate(() => window.__harness.setVariant(3));   // the fourth reply is showing
+  await wait(700);
+  await page.evaluate(() => { const s = window.__harness.scroller;
+    s.scrollTop = 0; s.dispatchEvent(new Event('scroll')); });   // only the shared part on screen
+  await wait(500);
+
+  const before = await page.evaluate(() => ({
+    variant: window.__harness.variant,
+    rendered: [...document.querySelectorAll('.row')].map((r) => Number(r.dataset.index)),
+  }));
+  // "123" lives on the branch that is showing, so nothing needs to be switched at all
+  await page.evaluate(`${S}.querySelector('${nodeSel(44)}').click()`);
+  await wait(300);
+  await page.evaluate(`${S}.querySelector('[data-detail="goto"]').click()`);
+  await wait(8000);
+
+  const after = await page.evaluate(`(() => {
+    const s = window.__harness.scroller;
+    const target = [...document.querySelectorAll('.row')].find((r) => r.textContent.includes('123'));
+    return { variant: window.__harness.variant,
+             onSibling: [...document.querySelectorAll('.row')].some((r) => r.textContent.includes('test 2')),
+             toast: ${S}.querySelector('[data-role="toast"]').textContent,
+             targetOffset: target ? Math.round(target.getBoundingClientRect().top - s.getBoundingClientRect().top) : null };
+  })()`);
+  check('3d · the branch showing is left alone when the message is already on it',
+    before.variant === 3 && after.variant === 3 && !after.onSibling, { before, after });
+  check('3d · and the chat scrolls to the message',
+    after.targetOffset !== null && after.targetOffset >= -8 && after.targetOffset < 120, after);
+  await page.screenshot({ path: `${OUT}/rn-twins.png` });
+  await page.close();
+}
+
 // --- 4 · the older, unnumbered markup ----------------------------------------------
 // The row numbering is Claude's and could go away. Switching has to keep working without it.
 {

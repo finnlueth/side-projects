@@ -22,9 +22,9 @@ await page.evaluate(`${S}.querySelector(${nodeSel(1)}).click()`);
 await wait(200);
 await page.evaluate(`${S}.querySelector('[data-detail="goto"]').click()`);
 await wait(400);
-check('2 · toasts report what happened', await page.evaluate(`(() => {
+check('2 · what happened is recorded, without showing a toast', await page.evaluate(`(() => {
   const t = ${S}.querySelector('[data-role="toast"]');
-  return t.classList.contains('is-visible') && t.textContent.includes('Scrolled'); })()`),
+  return !t.classList.contains('is-visible') && t.textContent.includes('Scrolled'); })()`),
   await page.evaluate(`${S}.querySelector('[data-role="toast"]').textContent`));
 
 // ---- 1 · a new chat closes the pane and takes the button away ----------------------

@@ -114,6 +114,55 @@ const layering = await page.evaluate(`(async () => {
 check("5 · Claude's dialogs render over the pane", layering.onTop && Number(layering.during) < Number(layering.dialogZ), layering);
 check('5 · the pane returns to the front afterwards', layering.after === layering.before, layering);
 
+// --- 7 · the tree stays centred when the window is resized -------------------------
+// The tree is drawn at a fixed offset inside the canvas, so a canvas that grows used to
+// leave it pinned towards one edge with all the new space on the other side. Checked on a
+// page of its own: with a message selected the pane also keeps the selection in view, which
+// is a separate, deliberate movement.
+{
+  const fresh = await browser.newPage();
+  await fresh.setViewport({ width: 1500, height: 950, deviceScaleFactor: 1 });
+  fresh.on('pageerror', (e) => problems.push(e.message));
+  await fresh.goto('http://127.0.0.1:8765/chat/00000000-0000-4000-8000-0000000000ff?theme=dark',
+    { waitUntil: 'networkidle0' });
+  await wait(700);
+  await fresh.evaluate(() => document.querySelector('.ct-toggle-host').shadowRoot
+    .querySelector('.ct-toggle').click());
+  await wait(1200);
+
+  const placement = `(() => {
+    const canvas = ${S}.querySelector('.ct-canvas').getBoundingClientRect();
+    const box = ${S}.querySelector('.ct-node').getBoundingClientRect();
+    return { dx: Math.round((box.left + box.width / 2) - (canvas.left + canvas.width / 2)),
+             dy: Math.round((box.top + box.height / 2) - (canvas.top + canvas.height / 2)),
+             w: Math.round(canvas.width), h: Math.round(canvas.height) };
+  })()`;
+
+  const framed = await fresh.evaluate(placement);
+  await fresh.setViewport({ width: 1120, height: 700, deviceScaleFactor: 1 });
+  await wait(700);
+  const shorter = await fresh.evaluate(placement);
+  // Narrow enough that the pane itself has to give way, so the canvas changes width too —
+  // the direction in which the tree was left stranded against one edge.
+  await fresh.setViewport({ width: 800, height: 700, deviceScaleFactor: 1 });
+  await wait(700);
+  const narrow = await fresh.evaluate(placement);
+  await fresh.setViewport({ width: 1500, height: 950, deviceScaleFactor: 1 });
+  await wait(700);
+  const back = await fresh.evaluate(placement);
+
+  const held = (a, b) => Math.abs(a.dx - b.dx) <= 6 && Math.abs(a.dy - b.dy) <= 6;
+  check('7 · the canvas really did change height', shorter.h !== framed.h, { framed, shorter });
+  check('7 · and width', narrow.w !== shorter.w, { shorter, narrow });
+  check('7 · the tree keeps its place when the window gets shorter',
+    held(framed, shorter), { framed, shorter });
+  check('7 · and when the pane is squeezed narrower',
+    held(shorter, narrow), { shorter, narrow });
+  check('7 · and when the window grows back', held(framed, back), { framed, back });
+  await fresh.screenshot({ path: `${OUT}/a1-resize.png` });
+  await fresh.close();
+}
+
 await page.screenshot({ path: `${OUT}/a0-final.png` });
 for (const c of checks) console.log(`${c.pass ? 'PASS' : 'FAIL'}  ${c.n}${c.d !== undefined ? '  ' + JSON.stringify(c.d) : ''}`);
 console.log(problems.length ? '\nPROBLEMS:\n' + problems.join('\n') : '\nno page errors');
