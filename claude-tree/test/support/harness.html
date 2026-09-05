@@ -27,6 +27,8 @@
   <header><div>Tidy tree layouts</div><div id="grp" class="grp"></div></header>
   <div class="messages" id="scroller"><div data-testid="transcript-sizer" id="spacer"></div></div>
   <div class="composer">Write a message…</div></main></div>
+<div id="sticky" hidden style="position:fixed;top:0;left:240px;right:0;height:130px;z-index:500;
+     background:linear-gradient(hsl(var(--bg-100)) 70%,transparent)"></div>
 <div id="findbar" hidden style="position:fixed;top:70px;right:40px;z-index:999;
      background:#2a2a28;padding:10px;border-radius:10px"><input id="findinput" placeholder="Find"></div>
 <div id="dlg" role="dialog" aria-modal="true" hidden
@@ -35,6 +37,7 @@
 <script>
   const P=new URLSearchParams(location.search);
   if(P.get('theme')==='dark') document.documentElement.classList.add('dark');
+  if(P.get('stickyheader')==='1') document.getElementById('sticky').hidden=false;
   document.getElementById('grp').innerHTML=
     '<button data-testid="wiggle-controls-actions-toggle" data-cds-icon-only aria-label="Files">D</button>'
     +'<span tabindex="-1"><button data-testid="wiggle-controls-actions-share">Share</button></span>';
@@ -99,16 +102,25 @@ const CONVO={name:'Tidy tree layouts',current_leaf_message_uuid:id(25),chat_mess
   M(22,21,'human','ok'),
   M(23,22,'assistant','Any time.'),
   M(24,23,'human','ok'),
-  M(25,24,'assistant','With a fair die p(omega) = 1/6 for every outcome.')]};
+  M(25,24,'assistant','With a fair die p(omega) = 1/6 for every outcome.'),
+  // An edited prompt: a human sibling of message 3. Served only with promptfork=1, so the
+  // shape of the conversation every other suite sees is unchanged.
+  M(30,2,'human','Rewrite that as pseudocode instead.'),
+  M(31,30,'assistant','    place(node): for child in node.children: place(child); node.x = centre(children)')]};
 const SC=P.get('scenario')||'ok';
+let STREAMING=null, STREAM_HIDDEN=false;
 window.__api={
   reads:0, pendingLeaf:null, staleReads:Number(P.get('lag')||0),
   readConversation(){
     this.reads++;
     if(SC==='error') return new Response('{}',{status:403});
     const copy=JSON.parse(JSON.stringify(CONVO));
+    if(STREAM_HIDDEN&&STREAMING!==null)
+      copy.chat_messages=copy.chat_messages.filter(m=>m.uuid!==id(STREAMING));
     if(P.get('flat')==='1') copy.chat_messages=copy.chat_messages.filter(
       m=>![5,6,7].includes(parseInt(m.uuid.slice(0,8),10)));
+    if(P.get('promptfork')!=='1') copy.chat_messages=copy.chat_messages.filter(
+      m=>![30,31].includes(parseInt(m.uuid.slice(0,8),10)));
     if(this.pendingLeaf){
       if(this.staleReads>0) this.staleReads--;            // still serving the old leaf
       else { copy.current_leaf_message_uuid=this.pendingLeaf;
@@ -117,26 +129,42 @@ window.__api={
     return new Response(JSON.stringify(copy),{status:200,
       headers:{'content-type':'application/json'}});
   }};
-const BRANCH_A=[1,2,3,4,8,9,20,21,22,23,24,25],BRANCH_B=[1,2,3,5,6,7];let variant=0;let PATH=BRANCH_A.slice();
+const BRANCH_A=[1,2,3,4,8,9,20,21,22,23,24,25],BRANCH_B=[1,2,3,5,6,7];
+// With promptfork=1 the fork is an edited prompt: the branches part at a *human* message.
+const PROMPT_FORK=P.get('promptfork')==='1',BRANCH_C=[1,2,30,31];
+const OTHER=()=>PROMPT_FORK?BRANCH_C:BRANCH_B;
+let variant=0;let PATH=BRANCH_A.slice();
 const byId=n=>CONVO.chat_messages.find(m=>m.uuid===id(n));
 const strip=t=>t.replace(/\*\*|\*|^##\s+/gm,'').replace(/\n+/g,' ');
 const H=n=>byId(n).sender==='human'?90:620;
 const tops=()=>{let y=0;return PATH.map(n=>{const t=y;y+=H(n);return t;});};
 const scroller=document.getElementById('scroller'),spacer=document.getElementById('spacer');
 const live=new Map();
-function setVariant(v){variant=Math.max(0,Math.min(1,v));PATH=(variant?BRANCH_B:BRANCH_A).slice();
+function setVariant(v){variant=Math.max(0,Math.min(1,v));PATH=(variant?OTHER():BRANCH_A).slice();
   CONVO.current_leaf_message_uuid=id(PATH[PATH.length-1]);
-  for(const [i,el] of live){el.remove();}live.clear();render();}
+  for(const [i,el] of live){el.remove();}live.clear();render();
+  // Claude scrolls the transcript to the end of a branch when it renders one, and keeps
+  // doing so for a moment afterwards. A single scroll made while that is happening is undone.
+  if(P.get('scrollonswitch')==='1'){
+    const toEnd=()=>{scroller.scrollTop=scroller.scrollHeight;scroller.dispatchEvent(new Event('scroll'));};
+    toEnd(); for(const d of [80,220,420,700]) setTimeout(toEnd,d);
+  }}
 function render(){
   const T=tops();spacer.style.height=(T[T.length-1]+H(PATH[PATH.length-1])+scroller.clientHeight*0.7)+'px';
   const top=scroller.scrollTop,bottom=top+scroller.clientHeight,want=new Set();
   PATH.forEach((n,i)=>{if(T[i]+H(n)>=top-150&&T[i]<=bottom+150)want.add(i);});
+  // gaps=1: drop rows out of the middle of the window. Claude's transcript does this, so the
+  // rendered row numbers are not a contiguous run and nothing may assume they are.
+  if(P.get('gaps')==='1'){const keep=[...want];keep.forEach((i,k)=>{if(k%3===1)want.delete(i);});}
   for(const [i,el] of live){if(!want.has(i)){el.remove();live.delete(i);}}
   for(const i of want){
     if(live.has(i))continue;
     const n=PATH[i],m=byId(n),el=document.createElement('div');
     el.className='row';el.dataset.testid='transcript-row';el.dataset.perfRow=m.sender;
+    // Claude clamps distance-from-tail at 10 but numbers every row absolutely; rownumbers=off
+    // reproduces the older markup, so the fallbacks stay covered.
     el.dataset.perfRowFromTail=String(Math.min(10, PATH.length-1-i));
+    if(P.get('rownumbers')!=='off'){el.dataset.index=String(i);el.dataset.rsIndex=String(i);}
     el.style.top=T[i]+'px';el.style.height=(H(n)-8)+'px';
     const body=document.createElement('div');
     if(m.sender==='human') body.dataset.testid='user-message'; else body.className='font-claude-response';
@@ -150,7 +178,7 @@ function render(){
     bar.querySelectorAll('button').forEach(btn=>btn.addEventListener('pointerdown',()=>{
       window.__pressed=(window.__pressed||[]).concat(btn.dataset.testid); }));
     el.appendChild(bar);
-    if((n===4||n===5) && P.get('switcher')!=='none'){
+    if((n===4||n===5) && !PROMPT_FORK && P.get('switcher')!=='none'){
       const mount=()=>{
         if(bar.querySelector('.switch')) return;
         const sw=document.createElement('div');sw.className='switch';
@@ -161,16 +189,45 @@ function render(){
           +(variant===1?' disabled':'')+'>&rsaquo;</button>';
         // Claude's controls key off the pointer sequence; a bare .click() must not work
         const bs=sw.querySelectorAll('button');
-        bs[0].addEventListener('pointerdown',()=>{ if(!bs[0].disabled) setVariant(variant-1); });
-        bs[1].addEventListener('pointerdown',()=>{ if(!bs[1].disabled) setVariant(variant+1); });
+        if(P.get('deadswitch')!=='1'){
+          bs[0].addEventListener('pointerdown',()=>{ if(!bs[0].disabled) setVariant(variant-1); });
+          bs[1].addEventListener('pointerdown',()=>{ if(!bs[1].disabled) setVariant(variant+1); });
+        }
         bar.appendChild(sw);
       };
-      if(P.get('hoverswitch')==='1') el.addEventListener('mouseover',mount); else mount();
+      if(P.get('hoverswitch')==='1') body.addEventListener('mouseover',mount); else mount();
+    }
+    // A fork made by editing a prompt. Claude puts its controls on the human row, with a
+    // different family of test ids, and that row has no action bar at all.
+    if((n===3||n===30) && PROMPT_FORK){
+      const mount=()=>{
+        if(el.querySelector('.switch')) return;
+        const sw=document.createElement('div');sw.className='switch';
+        sw.innerHTML='<button data-testid="user-message-previous-version" aria-label="Previous version"'
+          +(variant===0?' disabled':'')+'>&lsaquo;</button>'
+          +'<span>'+(variant+1)+' / 2</span>'
+          +'<button data-testid="user-message-next-version" aria-label="Next version"'
+          +(variant===1?' disabled':'')+'>&rsaquo;</button>';
+        const bs=sw.querySelectorAll('button');
+        if(P.get('deadswitch')!=='1'){
+          bs[0].addEventListener('pointerdown',()=>{ if(!bs[0].disabled) setVariant(variant-1); });
+          bs[1].addEventListener('pointerdown',()=>{ if(!bs[1].disabled) setVariant(variant+1); });
+        }
+        el.appendChild(sw);
+      };
+      body.addEventListener('mouseover',mount);
     }
     spacer.appendChild(el);live.set(i,el);}
 }
 scroller.addEventListener('scroll',render);render();
-window.__harness={render,scroller,tops,setVariant,path(){return PATH.slice();},
+window.__harness={render,scroller,tops,setVariant,
+  // a reply Claude is still streaming: on screen, not yet in the API's tree
+  startStreaming(text){
+    const n=90; STREAMING=n;
+    CONVO.chat_messages.push(M(n,PATH[PATH.length-1],'assistant',text));
+    PATH.push(n); STREAM_HIDDEN=true; render();
+  },
+  finishStreaming(){ STREAM_HIDDEN=false; CONVO.current_leaf_message_uuid=id(PATH[PATH.length-1]); render(); },path(){return PATH.slice();},
   dialog(open){document.getElementById('dlg').hidden=!open;},
   findBar(open){const f=document.getElementById('findbar');f.hidden=!open;
     if(open) document.getElementById('findinput').focus(); else document.getElementById('findinput').blur();},get variant(){return variant;},

@@ -238,7 +238,9 @@
     if (!reading) {
       reading = CT.chat.trackReading((ids) => panel.setCurrent(ids));
       panel.onTreeChange = (tree) => {
-        reading?.setNodes(tree ? tree.order.filter((node) => node.onPath) : []);
+        // Offer every branch; the page decides which one it is actually showing.
+        CT.chat.setBranches(tree ? CT.model.branchPaths(tree) : []);
+        reading?.refreshBranches();
       };
       panel.onTreeChange(panel.tree);
     }
@@ -461,7 +463,12 @@
     const resume = stored?.resume;
     if (!resume || Date.now() - resume.at > 30000) return;
     if (resume.conversation !== conversationIdFromLocation()) return;
-    panel.setOpen(true);
+    await panel.setOpen(true);
+    // Land on the message the switch was for, rather than wherever the reload left the chat.
+    if (resume.message) {
+      await panel.whenLoaded();
+      await panel.landOn(resume.message);
+    }
   }
 
   checkLocation();

@@ -239,9 +239,9 @@
   }
 
   /** Reload onto the branch just selected, and bring the pane back with it. */
-  async function reopenAfterReload(conversationId) {
+  async function reopenAfterReload(conversationId, message) {
     try {
-      await ext.storage.local.set({ resume: { conversation: conversationId, at: Date.now() } });
+      await ext.storage.local.set({ resume: { conversation: conversationId, message, at: Date.now() } });
     } catch { /* the pane simply stays closed after the reload */ }
     location.reload();
   }
@@ -306,6 +306,8 @@
       this.viewIsDefault = false;
       this.centreOnCurrent = false;
       this.shapeReportedFor = null;
+      this.pendingTarget = null;
+      this.readyWaiters = [];
       this.detailHeight = 0;
     }
 
@@ -531,14 +533,20 @@
       this.toast('Looking for the message…', { sticky: true });
 
       const outcome = await CT.chat.revealNode(node, {
-        onPath: node.onPath,
+        onPath: CT.chat.onDisplayedBranch(node),
         position: node.depth / depth,
       });
-      if (outcome === 'found' || outcome === 'switched') {
-        this.toast(outcome === 'switched'
+      if (outcome === 'found') {
+        this.toast('Scrolled to the message');
+        return;
+      }
+      if (outcome === 'switched') {
+        // The chat is on the right branch now; reload so the tree agrees with it, then
+        // locate the message properly rather than leaving the reader at the top.
+        await this.load({ quiet: true });
+        this.toast(await this.landOn(node.id)
           ? 'Switched branch and scrolled to the message'
-          : 'Scrolled to the message');
-        if (outcome === 'switched') await this.load({ quiet: true });
+          : 'Switched the chat to that branch');
         return;
       }
       if (outcome === 'not-found') {
@@ -548,6 +556,11 @@
 
       // On another branch and no switcher to be found: move the conversation itself.
       const leaf = CT.model.deepestLeaf(node);
+      if (!leaf) {
+        this.toast('That branch has no reply to switch to yet');
+        return;
+      }
+      this.pendingTarget = node.id;
       const moved = await CT.api.setCurrentLeaf(this.conversationId, leaf.id);
       if (moved.ok) {
         // Only reload once the move is readable, or claude.ai reloads onto the old branch.
@@ -557,12 +570,51 @@
           console.warn('[claude-tree] branch move accepted but not yet readable; ' +
             'reloading anyway — the chat may need a further refresh');
         }
-        await reopenAfterReload(this.conversationId);
+        await reopenAfterReload(this.conversationId, this.pendingTarget);
         return;
       }
       this.toast(`Could not reach that message — ${moved.reason}`);
       console.warn('[claude-tree] branch switch failed:', moved.reason,
         { conversation: this.conversationId, leaf: leaf.id });
+    }
+
+    /** Resolves once a tree has loaded, so callers after a reload do not race it. */
+    whenLoaded(timeout = 8000) {
+      if (this.status === 'ready') return Promise.resolve(true);
+      return new Promise((resolve) => {
+        const done = (value) => { clearTimeout(timer); resolve(value); };
+        const timer = setTimeout(() => done(false), timeout);
+        this.readyWaiters.push(() => done(true));
+      });
+    }
+
+    /**
+     * Scroll the chat to a message that should now be on the branch it is showing.
+     *
+     * Tried more than once: right after a branch switch the transcript is still mounting
+     * rows, and a message that is not in the page yet is indistinguishable from one that
+     * cannot be found at all. Giving up on the first attempt is what left the reader at the
+     * top of the conversation after switching.
+     */
+    async landOn(id, attempts = 3) {
+      const node = this.tree?.nodes.get(id);
+      if (!node) return false;
+      const depth = Math.max(1, (this.tree?.stats.depth ?? 1) - 1);
+
+      for (let attempt = 0; attempt < attempts; attempt += 1) {
+        const outcome = await CT.chat.revealNode(node, {
+          onPath: CT.chat.onDisplayedBranch(node),
+          position: node.depth / depth,
+          allowSwitch: false, // landing scrolls; it never changes which branch is showing
+        });
+        if (outcome === 'found') {
+          this.select(id, { center: true });
+          return true;
+        }
+        if (outcome === 'off-path') return false; // a switch is needed, not another look
+        await new Promise((resolve) => setTimeout(resolve, 220));
+      }
+      return false;
     }
 
     handleNodeKey(event) {
@@ -671,6 +723,7 @@
         this.error = null;
         this.loadedAt = Date.now();
         this.dirty = false;
+        this.readyWaiters.splice(0).forEach((resolve) => resolve());
         if (this.shapeReportedFor !== this.conversationId) {
           this.shapeReportedFor = this.conversationId;
           void this.reportTreeShape(tree);
@@ -908,8 +961,10 @@
       const notes = [];
       if (node.tools.length) notes.push(`Tools used: ${node.tools.join(', ')}`);
       if (node.attachments) notes.push(`${node.attachments} attachment${node.attachments === 1 ? '' : 's'}`);
-      // The label says what the button will actually do for this message.
-      const gotoLabel = node.onPath ? 'Show in chat' : 'Show this branch in the chat';
+      // The label says what the button will actually do for this message — judged by what
+      // the chat is showing, which is not always what the conversation record says.
+      const shown = CT.chat.onDisplayedBranch(node);
+      const gotoLabel = shown ? 'Show in chat' : 'Show this branch in the chat';
 
       detail.innerHTML = `
         <div class="ct-detail-resize" role="separator" aria-orientation="horizontal" title="Drag to resize"></div>

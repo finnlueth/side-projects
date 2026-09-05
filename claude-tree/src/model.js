@@ -276,12 +276,39 @@
     return { spread: edge, depth: run - depthGap };
   }
 
-  /** Follow a branch down to its most recent message — where selecting it should land. */
+  /**
+   * The message a branch should end at — its most recent reply.
+   *
+   * claude.ai will only accept an assistant message as a conversation's current leaf; asking
+   * it to end on one of your own turns is refused outright ("Current leaf message is not an
+   * assistant message in the conversation"). So the walk goes down to the newest descendant
+   * and then back up to the nearest reply, which is still inside the branch that was chosen.
+   *
+   * @returns {?object} the message to end on, or null if the branch holds no reply at all
+   */
   function deepestLeaf(node) {
     let current = node;
     while (current.children.length) current = current.children[current.children.length - 1];
+    while (current && current.sender !== 'assistant') current = current.parent;
     return current;
   }
 
-  CT.model = { buildTree, computeLayout, snippet, deepestLeaf };
+  /**
+   * Every root-to-leaf path through the tree, the one the API calls active first.
+   *
+   * The chat decides which of these it is showing, not the API, so the caller offers all of
+   * them and lets the page pick.
+   */
+  function branchPaths(tree) {
+    const paths = [];
+    for (const node of tree.order) {
+      if (node.children.length) continue;
+      const path = [];
+      for (let n = node; n; n = n.parent) path.unshift(n);
+      paths.push(path);
+    }
+    return paths.sort((a, b) => Number(b[b.length - 1].onPath) - Number(a[a.length - 1].onPath));
+  }
+
+  CT.model = { buildTree, computeLayout, snippet, deepestLeaf, branchPaths };
 })();

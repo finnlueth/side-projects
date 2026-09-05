@@ -83,7 +83,10 @@ selection — whenever the chat changes.
 Messages are matched to the page by **position, not by text**. Text is not an identity: two
 turns can read exactly the same, and one the page renders differently matches nothing at all.
 Claude renders a contiguous window of the branch and tags each row with its distance from the
-end, so the whole alignment is a single offset that one row fixes — after sorting rows by where
+end, so the whole alignment is a single offset. Several candidate offsets are tried rather than
+one, because the page and the tree can legitimately disagree about how many messages exist —
+while a reply is streaming the page runs a message ahead, and trusting the tail alone would
+discard every highlight until the tree caught up — after sorting rows by where
 they are on screen, since a virtualised list recycles them out of document order. Every row's
 sender, and the text of the first few, are checked against the messages they land on; a
 disagreement discards the alignment rather than reporting something wrong. Text matching remains
@@ -101,6 +104,7 @@ renders it, starting from an estimate of where along the branch it sits.
 | `src/chat.js` | Locating messages in the page, reading position, change detection |
 | `src/panel.js` | The shadow-DOM side pane: rendering, pan/zoom, detail drawer |
 | `src/panel.css` | Token bindings and pane styling |
+| `test/` | Regression suites — not part of the packaged extension |
 | `src/content.js` | Docks the toggle, reserves page width, follows client-side navigation |
 | `src/background.js` | Toolbar button, keyboard shortcut, and a fetch fallback |
 
@@ -130,6 +134,22 @@ pane, `<body>` additionally gets layout containment so it becomes their containi
 second step is applied only on evidence, and never while the document itself scrolls — where it
 would make fixed elements scroll away with the page. Closing the pane removes all of it.
 
+## Tests
+
+```sh
+node test/run.mjs              # every suite
+node test/run.mjs duplicate    # suites whose name matches
+```
+
+`test/suites/tree-model.mjs` exercises the tree building and layout directly in Node. The rest
+drive the real `src/` files in Chrome against `test/support/harness.html`, which stands in for
+claude.ai: it serves the conversation API, virtualises the transcript, carries the same row
+attributes (including the `data-perf-row-from-tail` clamp), mounts the message action bar from
+an inner node on hover as Claude does, and includes the cases that have actually caused bugs —
+identical messages, a two-character turn, a KaTeX fraction that reads as `1/6`, a reply still
+streaming, and a branch switcher wired to pointer events rather than `click`. Chrome and
+puppeteer are required; nothing under `test/` is included in the packaged extension.
+
 ## Limitations
 
 - **Unofficial.** It depends on a private API. If Anthropic changes the response shape the
@@ -139,14 +159,24 @@ would make fixed elements scroll away with the page. Closing the pane removes al
 - **Branch switching is a real write.** Selecting a branch moves the conversation's current
   message, using the endpoint claude.ai uses for its own `‹ 2/3 ›` control
   (`PUT .../chat_conversations/{id}/current_leaf_message_uuid`). Nothing else is ever written:
-  no messages, edits or deletions. The in-page control is tried first, because when it works
-  the chat updates with no reload at all: it drives Claude's own `action-bar-previous-version`
-  and `action-bar-next-version` buttons, falling back to the shape of an `n / m` readout with a
-  control either side. Those buttons only exist while a message is pointed at, and on a long
-  conversation the branch point is usually far off screen, so the fork is scrolled into view and
-  hovered before they are looked for. Every click is checked: one that does not move the chat is
-  undone and the walk stops, so a mis-identified control cannot leave the conversation somewhere
-  you did not ask for. Only when no control can be driven does it fall back to the API, which
+  no messages, edits or deletions. The in-page control is tried first, because when it works the chat
+  updates with no reload at all — it is Claude's own control, so Claude re-renders itself.
+  Only Claude's `action-bar-previous-version` / `action-bar-next-version` buttons count, or a
+  pair labelled "previous version" / "next version", and the button is pressed with a full
+  pointer sequence rather than `element.click()`, because a lone click event never reaches
+  handlers built on pointer events. Nothing is matched by the *shape* of an `n / m` readout: a
+  message containing `p(ω) = 1/6` renders exactly that shape, and the buttons beside it are
+  Copy and Retry. Claude's whole action bar — copy, retry and the switcher — exists in
+  the DOM only while a message is hovered, and the handler that mounts it sits on an inner
+  node, so events dispatched at the row never reach it. The fork is therefore scrolled into
+  view and then hovered the way a real mouse does: from the deepest element under the point,
+  bubbling up. Every press is
+  checked; one that does not move the chat is undone and the walk stops. Once the branch has
+  moved the tree is reloaded before the message is located, because the alignment still
+  describes the branch just left — and a message with little or no text could not be found by
+  text either. When the fallback reload is used, the message is carried across it, so you land
+  on what you asked for rather than at the top of the conversation.
+  Only when no control can be driven does it fall back to the API, which
   needs a reload — and that reload waits until the move is readable, because the write is
   accepted before it has propagated and reloading into that gap is what leaves the chat showing
   the branch you just left.
