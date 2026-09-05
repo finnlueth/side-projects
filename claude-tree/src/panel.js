@@ -1022,8 +1022,14 @@
         : node.attachments
           ? `<span class="ct-node-tag">${node.attachments} file${node.attachments === 1 ? '' : 's'}</span>`
           : '';
+      /*
+       * Rendered from the message's own text rather than the stripped-down preview, so a
+       * formula reads as a formula and emphasis as emphasis. Only inline markup: headings and
+       * lists would be shouting in a box four lines tall, and the source is cut short first
+       * because the box cannot show more than that anyway.
+       */
       const preview = node.preview
-        ? `<span class="ct-node-text">${esc(CT.model.snippet(node.preview, 320))}</span>`
+        ? `<span class="ct-node-text">${CT.render.preview(CT.model.snippet(node.text || node.preview, 400))}</span>`
         : '<span class="ct-node-text ct-node-empty">Empty message</span>';
 
       return `<button type="button" class="ct-node${isPath ? ' is-path' : ''}${isCurrent ? ' is-current' : ''}${isSelected ? ' is-selected' : ''}"
@@ -1111,7 +1117,10 @@
         </div>
         <div class="ct-detail-body">
           ${notes.length ? `<p class="ct-detail-note">${esc(notes.join(' · '))}</p>` : ''}
-          <p class="ct-detail-text">${esc(node.text || node.preview || 'Empty message')}</p>
+          ${CT.render.images(node.files)}
+          <div class="ct-detail-text">${node.text
+            ? CT.render.markdown(node.text)
+            : '<p>Empty message</p>'}</div>
           ${node.thinking ? `<details class="ct-thinking"><summary>Extended thinking</summary><pre>${esc(node.thinking)}</pre></details>` : ''}
         </div>
       `;

@@ -436,6 +436,9 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   color: var(--ct-text-2);
   word-break: break-word;
 }
+/* The box clamps its text to four lines; a code block inside it needs the same ceiling of
+   its own, since a nested block is not what the line clamp counts. */
+.ct-node-text .ct-code { max-height: 4.8em; }
 .ct-node.is-path .ct-node-text { color: var(--ct-text); }
 .ct-node-empty { font-style: italic; color: var(--ct-text-3); }
 
@@ -615,8 +618,112 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   font-size: 12.5px;
   line-height: 1.6;
   color: var(--ct-text);
-  white-space: pre-wrap;
+  /* The text is rendered markup now, so the line breaks are in the markup rather than kept
+     from the source — pre-wrap here would double every gap between paragraphs. */
   word-break: break-word;
+}
+
+/* ----------------------------------------------------------- rendered message --- */
+
+.ct-detail-text > :first-child { margin-top: 0; }
+.ct-detail-text > :last-child { margin-bottom: 0; }
+.ct-detail-text p { margin: 0 0 9px; }
+.ct-detail-text h3, .ct-detail-text h4, .ct-detail-text h5, .ct-detail-text h6 {
+  margin: 14px 0 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ct-text);
+}
+.ct-detail-text ul, .ct-detail-text ol { margin: 0 0 9px; padding-left: 20px; }
+.ct-detail-text li { margin: 2px 0; }
+.ct-detail-text blockquote {
+  margin: 0 0 9px;
+  padding-left: 10px;
+  border-left: 2px solid var(--ct-border);
+  color: var(--ct-text-2);
+}
+.ct-detail-text hr { margin: 12px 0; border: 0; border-top: 1px solid var(--ct-border); }
+.ct-detail-text a { color: var(--ct-accent); text-decoration: underline; }
+.ct-detail-text pre {
+  margin: 0 0 9px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  border-radius: var(--ct-radius-sm);
+  background: var(--ct-fill);
+  scrollbar-width: thin;
+}
+.ct-detail-text pre code { padding: 0; background: none; font-size: 11.5px; }
+/* Code blocks name their language, quietly, in the corner. */
+.ct-detail-text pre[data-lang] { position: relative; padding-top: 20px; }
+.ct-detail-text pre[data-lang]::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ct-text-3);
+}
+
+/* Just enough colour to read a block at a glance: what is said, what is meant, and what is
+   only a note. Drawn from the pane's own palette so it sits in both themes. */
+.ct-tok-word { color: var(--ct-accent); }
+.ct-tok-text { color: var(--ct-user); }
+.ct-tok-number { color: var(--ct-text); }
+.ct-tok-note { color: var(--ct-text-3); font-style: italic; }
+
+/* A fenced block, wherever it appears: same shape in a tree box as in the drawer, just
+   shorter. Laid out as a block so the code keeps its own line breaks and indentation. */
+.ct-code {
+  display: block;
+  margin: 4px 0;
+  padding: 6px 8px;
+  border-radius: var(--ct-radius-sm);
+  background: var(--ct-fill);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  line-height: 1.45;
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ct-detail-text .ct-code { font-size: 11.5px; overflow-x: auto; }
+
+.ct-node-text code, .ct-detail-text code {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--ct-fill);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+}
+.ct-node-text strong, .ct-detail-text strong { font-weight: 600; color: var(--ct-text); }
+.ct-node-text em, .ct-detail-text em { font-style: italic; }
+.ct-node-text del, .ct-detail-text del { opacity: 0.7; }
+
+/* Maths comes through as MathML, which the browser draws in the surrounding type. */
+.ct-node-text math, .ct-detail-text math { font-size: 1.02em; }
+.ct-detail-text math[display="block"] { display: block; margin: 8px 0; text-align: center; }
+.ct-node-text math[display="block"] { display: inline; }
+/* LaTeX the renderer could not read: shown as it was written rather than swallowed. */
+.ct-math-raw { color: var(--ct-text-2); }
+
+/* Pictures a message carries, and drawings it contains. */
+.ct-shots { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.ct-shot {
+  max-width: 116px;
+  max-height: 116px;
+  border-radius: var(--ct-radius-sm);
+  border: 1px solid var(--ct-border);
+  object-fit: cover;
+}
+.ct-figure { margin: 0 0 10px; }
+.ct-svg {
+  display: block;
+  max-width: 100%;
+  max-height: 260px;
+  border-radius: var(--ct-radius-sm);
+  background: var(--ct-fill);
 }
 .ct-detail-note { margin: 0 0 10px; font-size: 12px; color: var(--ct-text-3); }
 .ct-thinking { margin-top: 12px; border-top: 1px solid var(--ct-border); padding-top: 10px; }

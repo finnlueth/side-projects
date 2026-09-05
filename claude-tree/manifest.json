@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Claude Tree",
   "version": "0.1.0",
-  "description": "Visualise a Claude conversation — including every edited or regenerated branch — as an interactive tree in a side panel.",
+  "description": "Visualise a Claude conversation \u2014 including every edited or regenerated branch \u2014 as an interactive tree in a side panel.",
   "browser_specific_settings": {
     "gecko": {
       "id": "claude-tree@lueth.net",
@@ -26,7 +26,7 @@
     "96": "icons/icon.svg"
   },
   "action": {
-    "default_title": "Claude Tree — toggle the conversation tree",
+    "default_title": "Claude Tree \u2014 toggle the conversation tree",
     "default_icon": {
       "48": "icons/icon.svg",
       "96": "icons/icon.svg"
@@ -55,6 +55,7 @@
         "src/api.js",
         "src/model.js",
         "src/chat.js",
+        "src/render.js",
         "src/panel.js",
         "src/content.js"
       ],

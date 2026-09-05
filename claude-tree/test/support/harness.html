@@ -79,7 +79,8 @@
   };
 </script>
 <script src="/src/api.js"></script><script src="/src/model.js"></script>
-<script src="/src/chat.js"></script><script src="/src/panel.js"></script>
+<script src="/src/chat.js"></script><script src="/src/render.js"></script>
+<script src="/src/panel.js"></script>
 <script src="/src/content.js"></script>
 <script>
 const R='00000000-0000-4000-8000-000000000000';let c=0;
@@ -103,6 +104,12 @@ const CONVO={name:'Tidy tree layouts',current_leaf_message_uuid:id(25),chat_mess
   M(23,22,'assistant','Any time.'),
   M(24,23,'human','ok'),
   M(25,24,'assistant','With a fair die p(omega) = 1/6 for every outcome.'),
+  // rich=1: what a message actually contains — LaTeX, Markdown, a picture and a drawing.
+  M(50,25,'assistant','# Laplace\n\nFor a fair die $p(\\omega) = 1/6$, so $$\\frac{3}{6} = \\frac{1}{2}$$\n\n'
+    + 'and $\\sum_{i=1}^{n} x_i$ over $A \\subseteq \\Omega$.\n\n- first\n- second\n\n> a quoted line\n\n'
+    + '```python\nLap(A)  # a fair die\n```\n\n'
+    + '<svg viewBox="0 0 20 20" onload="alert(1)"><circle cx="10" cy="10" r="8" fill="red"/>'
+    + '<script>alert(2)<\/script></svg>'),
   // An edited prompt: a human sibling of message 3. Served only with promptfork=1, so the
   // shape of the conversation every other suite sees is unchanged.
   // twins=1: three replies to the same prompt that open identically, as retried answers to
@@ -136,6 +143,17 @@ window.__api={
       m=>![30,31].includes(parseInt(m.uuid.slice(0,8),10)));
     if(P.get('twins')!=='1') copy.chat_messages=copy.chat_messages.filter(
       m=>![40,41,42,43,44,45].includes(parseInt(m.uuid.slice(0,8),10)));
+    if(P.get('rich')!=='1') copy.chat_messages=copy.chat_messages.filter(
+      m=>parseInt(m.uuid.slice(0,8),10)!==50);
+    else for(const m of copy.chat_messages){
+      if(parseInt(m.uuid.slice(0,8),10)===50)
+        m.files=[{file_kind:'image',file_name:'shot.png',
+          thumbnail_url:'/api/00000000/files/abc/thumbnail',
+          preview_url:'/api/00000000/files/abc/preview'}];
+      // rich=1 also gives message 25 real LaTeX, so the tree shows a formula in a preview
+      if(parseInt(m.uuid.slice(0,8),10)===25)
+        m.content=[{type:'text',text:'With a fair die $p(\\omega) = 1/6$ for every outcome.'}];
+    }
     if(this.pendingLeaf){
       if(this.staleReads>0) this.staleReads--;            // still serving the old leaf
       else { copy.current_leaf_message_uuid=this.pendingLeaf;

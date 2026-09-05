@@ -107,6 +107,7 @@
         thinking: described.thinking,
         tools: described.tools,
         attachments: described.attachments.length,
+        files: described.attachments,
         preview: described.preview,
         children: [],
         parent: null,
