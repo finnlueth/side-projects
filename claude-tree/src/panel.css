@@ -263,6 +263,11 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   transition: background var(--ct-dur-snap) var(--ct-ease), color var(--ct-dur-snap) var(--ct-ease);
 }
 .ct-icon-btn:hover { background: var(--ct-fill); color: var(--ct-text); }
+/* A toggle that is on reads as pressed, the way the direction control does. */
+.ct-icon-btn[aria-pressed="true"] {
+  background: var(--ct-fill-strong);
+  color: var(--ct-accent);
+}
 .ct-icon-btn:disabled { opacity: 0.4; cursor: default; background: transparent; }
 .ct-icon-btn svg { width: var(--ct-icon-size); height: var(--ct-icon-size); }
 .ct-icon-btn.is-busy .ct-glyph { animation: ct-spin 900ms linear infinite; }

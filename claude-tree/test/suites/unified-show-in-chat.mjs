@@ -81,6 +81,34 @@ check('double-click runs the same action', await page.evaluate(`
   ${S}.querySelector('[data-role="toast"]').textContent.includes('Scrolled')`),
   await page.evaluate(`${S}.querySelector('[data-role="toast"]').textContent`));
 
+// --- showing a reply lands on the prompt that produced it ---------------------------
+// JUMP_TO_PROMPT: a long answer scrolled to its own first line gives no clue what was asked,
+// so the chat comes to rest on the question above it. Only the scrolling changes — the reply
+// stays the message picked in the tree.
+await page.evaluate(() => { const s = window.__harness.scroller;
+  s.scrollTop = 0; s.dispatchEvent(new Event('scroll')); });
+await wait(300);
+await page.evaluate(`${S}.querySelector(${nodeSel(9)}).click()`);   // one of Claude's replies
+await wait(300);
+await page.evaluate(`${S}.querySelector('[data-detail="goto"]').click()`);
+await wait(4000);
+const landing = await page.evaluate(`(() => {
+  const rows = [...document.querySelectorAll('[data-testid="transcript-row"]')];
+  const at = (text) => {
+    const row = rows.find((r) => r.textContent.includes(text));
+    return row ? Math.round(row.getBoundingClientRect().top) : null;
+  };
+  return {
+    prompt: at('Does the simple version ever overlap'),   // message 8, the question
+    reply: at('Every node lands inside'),                 // message 9, its answer
+    picked: (${S}.querySelector('.ct-node.is-selected') || {}).dataset?.id?.slice(0, 8),
+  };
+})()`);
+check('showing a reply scrolls to the prompt above it',
+  landing.prompt !== null && landing.prompt > -8 && landing.prompt < 260, landing);
+check('and the reply is still the message picked in the tree',
+  landing.picked === '00000009', landing);
+
 await page.screenshot({ path: `${OUT}/d0-unified.png` });
 for (const c of checks) console.log(`${c.pass ? 'PASS' : 'FAIL'}  ${c.n}${c.d !== undefined ? '  ' + JSON.stringify(c.d) : ''}`);
 console.log(problems.length ? '\nPROBLEMS:\n' + problems.join('\n') : '\nno page errors');

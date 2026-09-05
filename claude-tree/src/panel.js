@@ -21,9 +21,22 @@
   const SHOW_TOASTS = false;
   /** The summary pills above the tree are switched off; the code stays in place. */
   const SHOW_STATS = false;
+  /**
+   * Showing one of Claude's replies in the chat scrolls to the prompt above it instead.
+   *
+   * A reply reads better from the question that produced it, and a long answer scrolled to
+   * its own first line gives no clue what was asked. Set to false to land on the reply
+   * itself. Only the scrolling changes: the message picked in the tree stays picked, and the
+   * branch worked out to reach it is the reply's own.
+   */
+  const JUMP_TO_PROMPT = true;
   const MIN_DETAIL = 120;
   /** How long a click waits to see whether it is really the first half of a double-click. */
   const DOUBLE_CLICK_MS = 250;
+  /** How long the canvas takes to glide when it follows the chat. */
+  const GLIDE_MS = 260;
+  /** Room left around a message the canvas has followed to. */
+  const FOLLOW_PAD = 28;
   /** Share of the pane the message drawer may take before it crowds out the tree. */
   const MAX_DETAIL_RATIO = 0.8;
   const MIN_SCALE = 0.15;
@@ -125,6 +138,9 @@
     warning: glyph('<path d="M12 8.5v5M12 17h.01"/><circle cx="12" cy="12" r="9"/>'),
     branch: glyph('<path d="M4 12h4.5c3 0 3-5 6-5H20M16.5 4.5 20 7l-3.5 2.5M8.5 12c3 0 3 5 6 5H20M16.5 14.5 20 17l-3.5 2.5"/>'),
     chat: glyph('<path d="M20 14.5a2.5 2.5 0 0 1-2.5 2.5H8l-4 3.5V6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5z"/>'),
+    // A message with the tree following it up and down.
+    follow: glyph('<circle cx="12" cy="12" r="2.75"/><path d="M12 2.5v4M12 17.5v4"/>'
+      + '<path d="M8.75 5.75 12 2.5l3.25 3.25M8.75 18.25 12 21.5l3.25-3.25"/>'),
   };
 
   /* ------------------------------------------------------------------ theme ------ */
@@ -306,6 +322,12 @@
       this.toastTimer = 0;
       this.exitTimer = 0;
       this.viewIsDefault = false;
+      /** Whether the canvas follows the messages the chat is showing. */
+      this.sticky = false;
+      this.glideFrame = 0;
+      /** Where a glide in progress is heading, so follow-ups measure against that. */
+      this.glideTarget = null;
+      this.lastFollowTop = null;
       this.centreOnCurrent = false;
       this.shapeReportedFor = null;
       this.pendingTarget = null;
@@ -348,6 +370,7 @@
       }
       this.width = clamp(Number(prefs.width) || DEFAULT_WIDTH, MIN_WIDTH, this.maxWidth());
       this.detailHeight = Number(prefs.detailHeight) || 0;
+      this.sticky = prefs.sticky === true;
 
       discoverGlyphs();
       const { host, shadow } = await createHost('ct-panel-host', { hidden: true });
@@ -380,6 +403,9 @@
               <span class="ct-zoom-value" data-role="zoom">100%</span>
               <button class="ct-icon-btn" data-action="zoom-in" title="Zoom in" aria-label="Zoom in">${ICON.plus}</button>
               <button class="ct-icon-btn" data-action="fit" title="Reset view — press again to fit the whole tree" aria-label="Reset view">${ICON.fit}</button>
+              <button class="ct-icon-btn" data-action="sticky" aria-pressed="false"
+                title="Follow the chat — keep the messages on screen centred in the tree"
+                aria-label="Follow the chat">${ICON.follow}</button>
             </div>
           </div>
           <div class="ct-bar-end">
@@ -550,6 +576,7 @@
         case 'zoom-out': this.zoomBy(1 / 1.25); break;
         case 'fit': this.viewIsDefault ? this.fitAll() : this.resetView(); break;
         case 'orient': this.setOrientation(button.dataset.value); break;
+        case 'sticky': this.setSticky(!this.sticky); break;
         default: break;
       }
     }
@@ -581,15 +608,31 @@
      * Claude's own "‹ 2/3 ›" control is tried, and failing that the conversation's current
      * message is moved through the API — which needs a reload for Claude to re-render.
      */
+    /**
+     * Which message the chat is scrolled to when `node` is asked for.
+     *
+     * See JUMP_TO_PROMPT. The prompt is the reply's own parent, so it is on the same branch
+     * and needs no separate work to reach.
+     */
+    scrollTargetFor(node) {
+      if (!JUMP_TO_PROMPT || node.sender !== 'assistant') return node;
+      return node.parent?.sender === 'human' ? node.parent : node;
+    }
+
     async goToMessage(node) {
       const depth = Math.max(1, (this.tree?.stats.depth ?? 1) - 1);
       this.toast('Looking for the message…', { sticky: true });
+
+      // The branch is worked out from the message that was asked for; only where the chat
+      // comes to rest can differ.
+      const anchorId = this.scrollTargetFor(node).id;
 
       const outcome = await CT.chat.revealNode(node, {
         onPath: CT.chat.onDisplayedBranch(node),
         position: node.depth / depth,
       });
       if (outcome === 'found') {
+        if (anchorId !== node.id) await this.landOn(anchorId, { select: false });
         this.toast('Scrolled to the message');
         return;
       }
@@ -597,7 +640,9 @@
         // The chat is on the right branch now; reload so the tree agrees with it, then
         // locate the message properly rather than leaving the reader at the top.
         await this.load({ quiet: true });
-        this.toast(await this.landOn(node.id)
+        const landed = await this.landOn(node.id);
+        if (landed && anchorId !== node.id) await this.landOn(anchorId, { select: false });
+        this.toast(landed
           ? 'Switched branch and scrolled to the message'
           : 'Switched the chat to that branch');
         return;
@@ -660,7 +705,7 @@
      * cannot be found at all. Giving up on the first attempt is what left the reader at the
      * top of the conversation after switching.
      */
-    async landOn(id, attempts = 3) {
+    async landOn(id, { attempts = 3, select = true } = {}) {
       const node = this.tree?.nodes.get(id);
       if (!node) return false;
       const depth = Math.max(1, (this.tree?.stats.depth ?? 1) - 1);
@@ -672,7 +717,7 @@
           allowSwitch: false, // landing scrolls; it never changes which branch is showing
         });
         if (outcome === 'found') {
-          this.select(id, { center: true });
+          if (select) this.select(id, { center: true });
           return true;
         }
         if (outcome === 'off-path') return false; // a switch is needed, not another look
@@ -746,11 +791,31 @@
       if (this.open) this.load();
     }
 
+    /** Everything the pane remembers between visits. */
+    persist() {
+      savePrefs({
+        orientation: this.orientation,
+        width: this.width,
+        detailHeight: this.detailHeight,
+        sticky: this.sticky,
+      });
+    }
+
+    setSticky(on) {
+      this.sticky = Boolean(on);
+      this.el?.root?.querySelector('[data-action="sticky"]')
+        ?.setAttribute('aria-pressed', String(this.sticky));
+      this.persist();
+      this.lastFollowTop = null;             // the next update starts a fresh direction
+      if (this.sticky) this.followCurrent([...this.currentIds || []]);
+      else this.stopGlide();
+    }
+
     setOrientation(orientation) {
       if (orientation !== 'vertical' && orientation !== 'horizontal') return;
       if (this.orientation === orientation) return;
       this.orientation = orientation;
-      savePrefs({ orientation, width: this.width, detailHeight: this.detailHeight });
+      this.persist();
       this.renderAll();
       this.resetView();
       this.ensureVisible(this.selectedId);
@@ -847,6 +912,8 @@
       for (const button of this.el.root.querySelectorAll('[data-action="orient"]')) {
         button.setAttribute('aria-pressed', String(button.dataset.value === this.orientation));
       }
+      this.el.root.querySelector('[data-action="sticky"]')
+        ?.setAttribute('aria-pressed', String(this.sticky));
     }
 
     renderStats() {
@@ -1074,7 +1141,10 @@
       if (this.centreOnCurrent && visible.length) {
         this.centreOnCurrent = false;
         this.centerOn(visible[0]);
+        this.lastFollowTop = null;
+        return;
       }
+      this.followCurrent(visible);
     }
 
     select(id, { center = false } = {}) {
@@ -1200,7 +1270,143 @@
       this.applyView();
     }
 
+    /**
+     * Keep the messages the chat is showing in view as it scrolls.
+     *
+     * Sideways, the canvas centres on the message leading the way rather than on all of them
+     * together. Averaging them only works while they sit in one column: across a fork the
+     * messages on screen can span further than the canvas is wide, and centring on the middle
+     * of that span puts *both* ends off the edge — which is how scrolling to the top of a
+     * conversation could leave the first message off the canvas with the later ones showing.
+     * Consecutive messages on a branch share a column, so this still reads as the column
+     * being centred.
+     *
+     * Up and down, the canvas only moves when the message leading the way is off it — the
+     * lowest one when scrolling down, the highest when scrolling up. It is then brought just
+     * inside whichever edge it fell outside, and otherwise nothing moves: a reader working
+     * within one screenful should not have the tree drifting under them.
+     *
+     * Both edges are checked, not just the one being scrolled towards. Checking only that
+     * edge leaves the leading message stranded whenever it is off the *other* one, which is
+     * what happened at the top of a conversation — scrolling up to the first message left
+     * the canvas showing the messages below it, because the first message was past the
+     * bottom edge and the upward rule only ever looked at the top.
+     */
+    followCurrent(ids) {
+      if (!this.sticky || !this.mounted || !ids?.length) return;
+      if (this.el.canvas.classList.contains('is-panning')) return; // the reader has the wheel
+
+      let highest = null; // the message nearest the start of the conversation
+      let lowest = null;  // ...and the one nearest its end
+      for (const id of ids) {
+        const el = this.el.nodes.querySelector(`.ct-node[data-id="${CSS.escape(id)}"]`);
+        if (!el) continue;
+        const x = parseFloat(el.style.left);
+        const y = parseFloat(el.style.top);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+        const span = {
+          left: x, right: x + el.offsetWidth, top: y, bottom: y + el.offsetHeight,
+        };
+        if (!highest || span.top < highest.top) highest = span;
+        if (!lowest || span.bottom > lowest.bottom) lowest = span;
+      }
+      if (!highest || !lowest) return;
+
+      const { width, height } = this.canvasSpace();
+      const { scale } = this.view;
+
+      // Up and down: nudge only when the message leading the way is off the canvas.
+      // With no previous reading there is no direction yet, and guessing "down" anchors the
+      // lowest message and pushes the earliest one off the top — the opposite of what someone
+      // who has just arrived at the start of a conversation wants. Lead with the earliest.
+      const goingDown = this.lastFollowTop !== null && this.lastFollowTop !== undefined
+        && highest.top >= this.lastFollowTop;
+      this.lastFollowTop = highest.top;
+
+      const lead = goingDown ? lowest : highest;
+
+      // Sideways: centred on that message.
+      const x = width / 2 - ((lead.left + lead.right) / 2) * scale;
+
+      /*
+       * Measured against where the canvas is going, not where it happens to be this frame.
+       * A glide takes a few hundred milliseconds, and scrolling produces updates faster than
+       * that, so reading the live position asks "is the message on screen?" of somewhere the
+       * canvas is only passing through. Answering yes about a halfway position stops the
+       * follow early — and a quick scroll to the start of a conversation then finishes with
+       * the first message still off the canvas.
+       */
+      let y = (this.glideTarget ?? this.view).y;
+      const leadTop = lead.top * scale + y;
+      const leadBottom = lead.bottom * scale + y;
+      if (leadBottom > height - FOLLOW_PAD) y -= leadBottom - (height - FOLLOW_PAD);
+      else if (leadTop < FOLLOW_PAD) y += FOLLOW_PAD - leadTop;
+
+      this.glideTo(x, y);
+    }
+
+    /**
+     * The part of the canvas a message can actually be seen in.
+     *
+     * The drawer is drawn over the bottom of the canvas, so anything moved into the strip
+     * behind it is not on screen at all — which is what put a message being scrolled to
+     * underneath the open drawer.
+     */
+    canvasSpace() {
+      const box = this.el.canvas.getBoundingClientRect();
+      const drawer = this.el.detail;
+      const covered = drawer && !drawer.hidden
+        ? Math.max(0, box.bottom - drawer.getBoundingClientRect().top)
+        : 0;
+      return { width: box.width, height: Math.max(80, box.height - covered) };
+    }
+
+    /** Ease the canvas to a position, rather than snapping it there. */
+    glideTo(x, y) {
+      this.stopGlide();
+      this.glideTarget = { x, y };
+      const fromX = this.view.x;
+      const fromY = this.view.y;
+      const dx = x - fromX;
+      const dy = y - fromY;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) { this.glideTarget = null; return; }
+
+      // A reader who has asked for less motion gets the move without the animation.
+      const still = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+      if (still) {
+        this.view.x = x;
+        this.view.y = y;
+        this.applyView({ isDefault: this.viewIsDefault });
+        this.glideTarget = null;
+        return;
+      }
+
+      const started = performance.now();
+      const step = (now) => {
+        const t = Math.min(1, (now - started) / GLIDE_MS);
+        const eased = 1 - (1 - t) ** 3;
+        this.view.x = fromX + dx * eased;
+        this.view.y = fromY + dy * eased;
+        this.applyView({ isDefault: this.viewIsDefault });
+        if (t < 1) {
+          this.glideFrame = requestAnimationFrame(step);
+        } else {
+          this.glideFrame = 0;
+          this.glideTarget = null;
+        }
+      };
+      this.glideFrame = requestAnimationFrame(step);
+    }
+
+    /** Drop any glide in progress, so it cannot fight what happens next. */
+    stopGlide() {
+      if (this.glideFrame) cancelAnimationFrame(this.glideFrame);
+      this.glideFrame = 0;
+      this.glideTarget = null;
+    }
+
     centerOn(id) {
+      this.stopGlide();
       const el = this.el.nodes.querySelector(`.ct-node[data-id="${CSS.escape(id)}"]`);
       if (!el) return;
       const box = this.el.canvas.getBoundingClientRect();
@@ -1213,6 +1419,7 @@
     }
 
     handleWheel(event) {
+      this.stopGlide();
       event.preventDefault();
       const box = this.el.canvas.getBoundingClientRect();
       // Trackpad pinch and ctrl/⌘ + wheel zoom; a plain wheel pans, like a canvas editor.
@@ -1231,6 +1438,7 @@
 
     handlePanStart(event) {
       if (event.button !== 0) return;
+      this.stopGlide();
       const start = { x: event.clientX, y: event.clientY, vx: this.view.x, vy: this.view.y };
       let moved = false;
       this.suppressClick = false;
@@ -1295,7 +1503,7 @@
         handle.removeEventListener('pointermove', move);
         handle.removeEventListener('pointerup', up);
         handle.classList.remove('is-active');
-        savePrefs({ orientation: this.orientation, width: this.width, detailHeight: this.detailHeight });
+        this.persist();
       };
       handle.addEventListener('pointermove', move);
       handle.addEventListener('pointerup', up);
@@ -1318,7 +1526,7 @@
         this.el.resize.removeEventListener('pointermove', move);
         this.el.resize.removeEventListener('pointerup', up);
         this.el.resize.classList.remove('is-active');
-        savePrefs({ orientation: this.orientation, width: this.width, detailHeight: this.detailHeight });
+        this.persist();
       };
       this.el.resize.addEventListener('pointermove', move);
       this.el.resize.addEventListener('pointerup', up);

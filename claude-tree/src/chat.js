@@ -1099,12 +1099,25 @@
    */
   async function landAt(node, position, tries = 12) {
     let held = 0;
+    let hunts = 0;
     for (let attempt = 0; attempt < tries; attempt += 1) {
-      // Claude's scroll to the end of the branch takes the message off screen again, and a
-      // message that is not rendered cannot be scrolled to — so look for it once more rather
-      // than concluding it has gone. This is what left the reader at the last message of the
-      // branch while the pane reported that it had scrolled to theirs.
-      const el = findElement(node) || await hunt(node, position);
+      /*
+       * Claude's scroll to the end of the branch takes the message off screen again, and a
+       * message that is not rendered cannot be scrolled to — so look for it once more rather
+       * than concluding it has gone. This is what left the reader at the last message of the
+       * branch while the pane reported that it had scrolled to theirs.
+       *
+       * Sweeping the transcript is expensive though, so it is done twice at most. A message
+       * that is not on the branch being shown will never be found however many times it is
+       * looked for, and the caller is left waiting seconds for an answer it could have had at
+       * once.
+       */
+      let el = findElement(node);
+      if (!el) {
+        if (hunts >= 2) return false;
+        hunts += 1;
+        el = await hunt(node, position);
+      }
       if (!el) return false;
 
       if (atStart(el)) {

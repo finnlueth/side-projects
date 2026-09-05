@@ -58,6 +58,32 @@ npx web-ext build     # -> web-ext-artifacts/*.zip
 npx web-ext run       # launch a scratch profile with the extension loaded
 ```
 
+## Building
+```sh
+rm -rf web-ext-artifacts && mkdir -p web-ext-artifacts
+    VER=$(python3 -c "import json;print(json.load(open('manifest.json'))['version'])")
+    OUT="web-ext-artifacts/claude_tree-$VER.zip"
+    zip -r -X "$OUT" manifest.json README.md icons src \
+      -x '*.DS_Store' -x '*/.*' > /dev/null
+```
+
+Produces `web-ext-artifacts/claude_tree-<version>.zip` with `manifest.json` at the archive
+root, as Firefox requires. The file selection matches the ignore list in
+`web-ext-config.cjs`, so `test/`, `tmp/`, `_check.html` and dotfiles stay out; `npx web-ext
+build` produces the same contents and additionally lints the manifest.
+
+### Installing in Firefox
+
+The zip is unsigned:
+
+- **Temporary** (any Firefox): `about:debugging#/runtime/this-firefox` → *Load Temporary
+  Add-on…* → select the zip. Removed on restart.
+- **Permanent**: sign via addons.mozilla.org, or use Developer Edition / Nightly / ESR with
+  `xpinstall.signatures.required = false` in `about:config`, then `about:addons` → gear →
+  *Install Add-on From File…*. Release Firefox refuses unsigned add-ons regardless.
+
+Two notes: -X strips macOS extended attributes, and the -x '*/.*' guard keeps dotfiles out of the archive. The zip step needs to run from the repo root, since paths are relative.
+
 ## Using it
 
 | Action | How |
