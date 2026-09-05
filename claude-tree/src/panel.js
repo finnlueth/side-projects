@@ -65,10 +65,13 @@
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ` +
     `stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${extra}>${body}</svg>`;
 
+  // Rounded boxes rather than dots: the tree draws messages as boxes, and the icon should
+  // say so.
   const TREE_PATHS =
-    '<circle cx="12" cy="4.5" r="2.2"/><circle cx="6" cy="19.5" r="2.2"/>' +
-    '<circle cx="18" cy="19.5" r="2.2"/>' +
-    '<path d="M12 6.7v3.6c0 3.4-6 2.6-6 7M12 10.3c0 3.4 6 2.6 6 7"/>';
+    '<rect x="9.7" y="2.2" width="4.6" height="4.6" rx="1.5"/>' +
+    '<rect x="3.7" y="17.2" width="4.6" height="4.6" rx="1.5"/>' +
+    '<rect x="15.7" y="17.2" width="4.6" height="4.6" rx="1.5"/>' +
+    '<path d="M12 6.8v3.5c0 3.4-6 2.6-6 6.9M12 10.3c0 3.4 6 2.6 6 6.9"/>';
 
   /**
    * Icons.

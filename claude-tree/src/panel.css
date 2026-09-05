@@ -195,11 +195,19 @@ svg.ct-glyph { width: var(--ct-icon-size); height: var(--ct-icon-size); }
   width: var(--ct-btn-size, 34px);
   height: var(--ct-btn-size, 34px);
   border-radius: var(--ct-btn-radius, 8px);
-}
-:host(.ct-header-host) .ct-toggle:hover { background: var(--ct-fill); color: var(--ct-text); }
-:host(.ct-header-host) .ct-toggle[aria-pressed="true"] {
-  background: var(--ct-fill-strong);
+  /* Claude's own header icons are drawn in --text-100; the pane's default of --text-300 sat
+     visibly greyer than the buttons either side of it. */
   color: var(--ct-text);
+}
+/* Tinted with Claude's own accent rather than a neutral grey, the way the documents button
+   carries a tint of its own when it is the thing you are looking at. */
+:host(.ct-header-host) .ct-toggle:hover {
+  background: color-mix(in srgb, var(--ct-accent) 12%, transparent);
+  color: var(--ct-text);
+}
+:host(.ct-header-host) .ct-toggle[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--ct-accent) 22%, transparent);
+  color: var(--ct-accent);
 }
 :host(.ct-header-host) .ct-toggle-label,
 :host(.ct-header-host) .ct-toggle-count { display: none; }

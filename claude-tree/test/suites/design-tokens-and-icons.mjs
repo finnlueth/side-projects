@@ -30,6 +30,39 @@ check('7 · close glyph harvested from the live page', await page.evaluate(`(() 
   return !!shown && shown === source;
 })()`));
 
+// --- 8 · the toggle sits with the icons beside it ---------------------------------
+// It used to be drawn in --text-300 while Claude's own header icons use --text-100, which
+// read as a visibly greyer icon in the same row.
+const toggleLook = await page.evaluate(`(() => {
+  const host = document.querySelector('.ct-toggle-host');
+  const button = host.shadowRoot.querySelector('.ct-toggle');
+  const sibling = document.querySelector('[data-testid="wiggle-controls-actions-toggle"]');
+  return {
+    ours: getComputedStyle(button).color,
+    theirs: getComputedStyle(sibling).color,
+    boxes: button.querySelectorAll('svg rect').length,
+    dots: button.querySelectorAll('svg circle').length,
+    rounded: [...button.querySelectorAll('svg rect')].every((r) => Number(r.getAttribute('rx')) > 0),
+  };
+})()`);
+// Open, it carries a tint of Claude's accent rather than a neutral grey — the treatment the
+// documents button gets. Measured as "not grey": the accent has a red channel well clear of
+// the others, which a neutral fill never does.
+const tint = await page.evaluate(`(() => {
+  const button = document.querySelector('.ct-toggle-host').shadowRoot.querySelector('.ct-toggle');
+  if (button.getAttribute('aria-pressed') !== 'true') button.click();
+  const open = getComputedStyle(button).backgroundColor;
+  // Either rgb(...) or the newer color(srgb ...): read the first three numbers and put them
+  // on the same scale before comparing.
+  const parts = (open.match(/[\\d.]+/g) || []).map(Number).slice(0, 3);
+  const [r, g, b] = parts.every((n) => n <= 1) ? parts.map((n) => n * 255) : parts;
+  return { open, warm: Math.round(r - Math.max(g, b)) };
+})()`);
+check('8 · and open, its background is tinted with the accent',
+  tint.warm >= 6, tint);
+check('8 · and its messages are rounded boxes, not dots',
+  toggleLook.boxes === 3 && toggleLook.dots === 0 && toggleLook.rounded, toggleLook);
+
 check('7 · colours, metrics and type resolve from claude.ai tokens', await page.evaluate(`(() => {
   const cs = getComputedStyle(${S}.querySelector('.ct-root'));
   const page = getComputedStyle(document.body).backgroundColor;
