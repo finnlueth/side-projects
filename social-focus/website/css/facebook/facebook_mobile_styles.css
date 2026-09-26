@@ -1,0 +1,256 @@
+/* ------------------ Remove Feed Posts Separators ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"]
+  div[data-mcomponent="MScreen"]:has(img[src*="kNse9VPGmA4.png"])
+  div[data-type="vscroller"]
+  > div[data-mcomponent="MContainer"][data-type="container"]:has(
+    img[src*="kNse9VPGmA4.png"]
+  )
+  ~ div[data-mcomponent="MContainer"][data-type="container"].m:has(
+    > div[data-mcomponent="TextArea"][style*="height:1px;"]
+  ) {
+  display: none !important;
+}
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"]
+  div[data-mcomponent="MScreen"]:has(img[src*="kNse9VPGmA4.png"])
+  div[data-type="vscroller"]
+  > div[data-mcomponent="MContainer"][data-type="container"]:has(
+    img[src*="kNse9VPGmA4.png"]
+  )
+  ~ div[data-mcomponent="MContainer"][data-type="container"].m {
+  margin-bottom: 4px !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_block_facebook="true"][socialFocus_site_is="facebook"]:not(
+    [socialFocus_facebook_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_master_toggle="true"][socialFocus_site_is="facebook"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_gray_mode="true"][socialFocus_site_is="facebook"]:not(
+    [socialFocus_facebook_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+/* ------------------------------------ HOME FEED ------------------------------------ */
+
+/* ------------------ Hide Home Feed ------------------ */
+
+/* --- Iphone --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_home_feed_hide_feed="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[data-mcomponent="MScreen"]:has(img[src*="kNse9VPGmA4.png"]) div[data-type="vscroller"] > div[data-mcomponent="MContainer"][data-type="container"]:has(img[src*="kNse9VPGmA4.png"]) ~ div[data-mcomponent="MContainer"][data-type="container"].m,
+
+/* --- Touch --- */
+/* --- Log Out -> ua mob -> touch.fb -> log in -> ua desk --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_home_feed_hide_feed="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) #MFirstBatch,
+
+/* ------------------ Hide Section - Stories ------------------ */
+
+/* --- Iphone --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_feed_hide_section_stories="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[data-mcomponent="MScreen"]:has(img[src*="kNse9VPGmA4.png"]) div[data-type="vscroller"] > div[data-mcomponent="MContainer"][data-type="container"].m:has(img[src*="kNse9VPGmA4.png"]),
+
+/* --- Touch --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_feed_hide_section_stories="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) #MStoriesTray,
+
+/* ------------------ Hide Section - Reels ------------------ */
+
+/* --- Iphone --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_feed_hide_section_reels_and_short_videos="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[data-mcomponent="MScreen"]:has(img[src*="kNse9VPGmA4.png"]) div[data-type="vscroller"] > div[data-mcomponent="MContainer"][data-type="container"]:has(img[src*="kNse9VPGmA4.png"]) ~ div[data-mcomponent="MContainer"][data-type="container"].m:has(div[style*="background-image:linear-gradient(to bottom, rgba(0,0,0,0.0),rgba(0,0,0,0.6392157));"]),
+
+/* --- Touch --- */
+
+/* ------------------ Hide Sponsored Posts ------------------ */
+
+/* --- Iphone --- */
+
+/* --- Touch --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_feed_hide_sponsored_posts="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) article:has(a[href*="/l.php"]),
+
+/* ------------------ Hide Home Feed Section - Suggested Groups ------------------ */
+
+/* --- Iphone --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_home_feed_section_suggested_groups="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[data-mcomponent="MScreen"]:has(img[src*="kNse9VPGmA4.png"]) div[data-type="vscroller"] > div[data-mcomponent="MContainer"][data-type="container"]:has(img[src*="kNse9VPGmA4.png"]) ~ div[data-mcomponent="MContainer"][data-type="container"].m:has([data-mcomponent="ImageArea"] + [data-mcomponent="TextArea"] > .native-text[style="color:#050505;"] > .f2),
+
+/* --- Touch --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_home_feed_section_suggested_groups="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) article:has(a[href*="groups/?category=discover"]),
+
+/* ------------------ Hide Home Feed Section - People you may know ------------------ */
+
+/* --- Iphone --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_home_feed_hide_sect_people="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[data-mcomponent="MScreen"]:has(img[src*="kNse9VPGmA4.png"]) div[data-type="vscroller"] > div[data-mcomponent="MContainer"][data-type="container"]:has(img[src*="kNse9VPGmA4.png"]) ~ div[data-mcomponent="MContainer"][data-type="container"].m:has([data-mcomponent="ImageArea"] + [data-mcomponent="TextArea"] > .native-text[style="color:#050505;"] > .f2),
+
+/* --- Touch --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_home_feed_hide_sect_people="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) article:has(a[href*="friends/center"]),
+
+/* ------------------------------------ HOME FEED ------------------------------------ */
+
+
+
+
+
+/* ------------------------------------ HEADER NAVIGATION ------------------------------------ */
+
+/* ------------------ Hide Button - Home ------------------ */
+
+/* --- Iphone --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_home="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[data-mcomponent="MScreen"] > div[data-mcomponent="MContainer"] > div[data-mcomponent="MContainer"]:has(> div[role="tab"]) > div[role="tab"]:nth-child(1) > div,
+
+/* --- Touch --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_home="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) #MChromeHeader div:has(> div[id="feed_jewel"]),
+
+/* ------------------ Hide Button - Friends ------------------ */
+
+/* --- Iphone --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_friends="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[data-mcomponent="MScreen"] > div[data-mcomponent="MContainer"] > div[data-mcomponent="MContainer"]:has(> div[role="tab"]) > div[role="tab"]:nth-child(2) > div {
+  display: none !important;
+}
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_friends="true"][socialFocus_site_is="facebook"]:not(
+    [socialFocus_facebook_master_toggle="true"]
+  )
+  div[data-mcomponent="MScreen"]
+  > div[data-mcomponent="MContainer"]
+  > div[data-mcomponent="MContainer"]:has(> div[role="tab"])
+  > div[role="tab"]:nth-child(2) {
+  pointer-events: none !important;
+}
+
+/* --- Touch --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_friends="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) #MChromeHeader div:has(> div[id="requests_jewel"]),
+
+/* ------------------ Hide Button - Messenger ------------------ */
+
+/* --- Iphone --- */
+
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_messanger="true"][socialFocus_site_is="facebook"]:not(
+    [socialFocus_facebook_master_toggle="true"]
+  )
+  div[data-mcomponent="MScreen"]
+  > div[data-mcomponent="MContainer"]
+  > div[data-mcomponent="MContainer"]:has(> div[role="tab"])
+  > div[role="tab"]:nth-child(3) > div {
+  display: none !important;
+}
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_messanger="true"][socialFocus_site_is="facebook"]:not(
+    [socialFocus_facebook_master_toggle="true"]
+  )
+  div[data-mcomponent="MScreen"]
+  > div[data-mcomponent="MContainer"]
+  > div[data-mcomponent="MContainer"]:has(> div[role="tab"])
+  > div[role="tab"]:nth-child(3) {
+  pointer-events: none !important;
+}
+
+/* --- Touch --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_messanger="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) #MChromeHeader div:has(> div[id*="messages_jewel"]),
+
+/* ------------------ Hide Button - Videos ------------------ */
+
+/* --- Iphone --- */
+
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_videos="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[data-mcomponent="MScreen"] > div[data-mcomponent="MContainer"] > div[data-mcomponent="MContainer"]:has(> div[role="tab"]) > div[role="tab"]:nth-child(4) > div {
+  display: none !important;
+}
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_videos="true"][socialFocus_site_is="facebook"]:not(
+    [socialFocus_facebook_master_toggle="true"]
+  )
+  div[data-mcomponent="MScreen"]
+  > div[data-mcomponent="MContainer"]
+  > div[data-mcomponent="MContainer"]:has(> div[role="tab"])
+  > div[role="tab"]:nth-child(4) {
+  pointer-events: none !important;
+}
+
+/* --- Touch --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_videos="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) #MChromeHeader div:has(> div[id="videos_tab_jewel"]),
+
+/* ------------------ Hide Button - Notifications ------------------ */
+
+/* --- Iphone --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_notifications="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[data-mcomponent="MScreen"] > div[data-mcomponent="MContainer"] > div[data-mcomponent="MContainer"]:has(> div[role="tab"]) > div[role="tab"]:nth-child(5) > div {
+  display: none !important;
+}
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_notifications="true"][socialFocus_site_is="facebook"]:not(
+    [socialFocus_facebook_master_toggle="true"]
+  )
+  div[data-mcomponent="MScreen"]
+  > div[data-mcomponent="MContainer"]
+  > div[data-mcomponent="MContainer"]:has(> div[role="tab"])
+  > div[role="tab"]:nth-child(5) {
+  pointer-events: none !important;
+}
+
+/* --- Touch --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_notifications="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) #MChromeHeader div:has(> div[id="notifications_jewel"]),
+
+/* ------------------ Hide Button - Marketplaece  ------------------ */
+
+/* --- Iphone --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_marketplace="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[data-mcomponent="MScreen"] > div[data-mcomponent="MContainer"] > div[data-mcomponent="MContainer"]:has(> div[role="tab"]) > div[role="tab"]:nth-child(6) > div {
+  display: none !important;
+}
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_marketplace="true"][socialFocus_site_is="facebook"]:not(
+    [socialFocus_facebook_master_toggle="true"]
+  )
+  div[data-mcomponent="MScreen"]
+  > div[data-mcomponent="MContainer"]
+  > div[data-mcomponent="MContainer"]:has(> div[role="tab"])
+  > div[role="tab"]:nth-child(6) {
+  pointer-events: none !important;
+}
+
+/* --- Touch --- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_headerNav_hide_button_marketplace="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) #MChromeHeader div:has(> div[id="marketplace_jewel"])
+
+/* ------------------------------------ HEADER NAVIGATION ------------------------------------ */ {
+  display: none !important;
+}
+
+/* ------------------------------------ OTHER ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_facebook_mobile_other_hide_open_in_app_banner="true"][socialFocus_site_is="facebook"]:not(
+    [socialFocus_facebook_master_toggle="true"]
+  )
+  div[data-mcomponent="MContainer"].fixed-container.bottom {
+  display: none !important;
+}

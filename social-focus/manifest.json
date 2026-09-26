@@ -1,0 +1,240 @@
+{
+  "manifest_version": 3,
+  "default_locale": "en",
+  "name": "__MSG_extension_name__",
+  "description": "__MSG_extension_description__",
+  "version": "7.2.2",
+  "icons": {
+    "48": "images/icon-48.png",
+    "96": "images/icon-96.png",
+    "128": "images/icon-128.png",
+    "256": "images/icon-256.png",
+    "512": "images/icon-512.png"
+  },
+  "background": {
+    "page": "background.html"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "socialfocus-custom@lueth.net",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  },
+  "content_scripts": [
+    {
+      "js": [
+        "global/storageConstants.js",
+        "global/globalHelpers.js",
+        "global/options/hackerNewsOptions.js",
+        "global/options/facebookOptions.js",
+        "global/options/gmailOptions.js",
+        "global/options/instagramOptions.js",
+        "global/options/linkedinOptions.js",
+        "global/options/redditOptions.js",
+        "global/options/twitterOptions.js",
+        "global/options/youtubeOptions.js",
+        "global/options/twitchOptions.js",
+        "global/options/pinterestOptions.js",
+        "global/options/netflixOptions.js",
+        "global/options/tikTokOptions.js",
+        "global/options/blueskyOptions.js",
+        "global/options/options.js",
+        "global/options/optionsMethods.js",
+        "website/scripts/websiteHelpers.js",
+        "website/scripts/FreeTime/freeTime.js",
+        "website/scripts/htmlAtrributesManager.js",
+        "website/scripts/Specials/dailyLimit/getBlockingContent.js",
+        "website/scripts/Specials/dailyLimit/showBlockingTimerModal.js",
+        "website/scripts/Specials/dailyLimit/blockingSiteByTimer.js",
+        "website/scripts/BlockExtensionObserver/blockExtensionObserver.js",
+        "website/scripts/BlockExtensionObserver/enableExtensionObserver.js",
+        "website/scripts/Shortcuts/shortcutsListener.js"
+      ],
+      "matches": [
+        "*://*.youtube.com/*",
+        "*://*.facebook.com/*",
+        "*://*.linkedin.com/*",
+        "*://*.twitter.com/*",
+        "*://twitter.com/*",
+        "*://*.x.com/*",
+        "*://x.com/*",
+        "*://*.reddit.com/*",
+        "*://*.instagram.com/*",
+        "*://*.google.com/*",
+        "*://news.ycombinator.com/*",
+        "*://*.twitch.tv/*",
+        "*://*.pinterest.com/*",
+        "*://*.netflix.com/*",
+        "*://*.tiktok.com/*",
+        "*://*.bsky.app/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "js": [
+        "website/scripts/DisableVideoAutoPlay/disableVideoAutoPlay.js",
+        "website/scripts/Specials/youtube/shorts.js"
+      ],
+      "css": [
+        "website/css/youtube/youtube_desktop_styles.css",
+        "website/css/youtube/youtube_mobile_styles.css"
+      ],
+      "matches": [
+        "*://*.youtube.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "js": [
+        "website/scripts/libs/mutation-summary.js",
+        "website/scripts/Specials/facebookSpecial.js"
+      ],
+      "css": [
+        "website/css/facebook/facebook_desktop_styles.css",
+        "website/css/facebook/facebook_mobile_styles.css"
+      ],
+      "matches": [
+        "*://*.facebook.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "css": [
+        "website/css/linkedin/linkedin_desktop_styles.css",
+        "website/css/linkedin/linkedin_mobile_styles.css"
+      ],
+      "matches": [
+        "*://*.linkedin.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "css": [
+        "website/css/twitter/twitter_desktop_styles.css",
+        "website/css/twitter/twitter_mobile_styles.css"
+      ],
+      "matches": [
+        "*://*.twitter.com/*",
+        "*://twitter.com/*",
+        "*://*.x.com/*",
+        "*://x.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "js": [
+        "website/scripts/Specials/reddit/headerTrendingToday.js",
+        "website/scripts/Specials/reddit/postHideButtons.js"
+      ],
+      "css": [
+        "website/css/reddit/reddit_desktop_styles.css",
+        "website/css/reddit/reddit_mobile_styles.css"
+      ],
+      "matches": [
+        "*://*.reddit.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "css": [
+        "website/css/instagram/instagram_desktop_styles.css",
+        "website/css/instagram/instagram_mobile_styles.css"
+      ],
+      "matches": [
+        "*://*.instagram.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "css": [
+        "website/css/gmail/gmail_desktop_styles.css",
+        "website/css/gmail/gmail_mobile_styles.css"
+      ],
+      "matches": [
+        "*://*.google.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "js": [
+        "website/scripts/Specials/hackerNewsSpecial.js"
+      ],
+      "css": [
+        "website/css/hackerNews/hacker_news_styles.css"
+      ],
+      "matches": [
+        "*://news.ycombinator.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "css": [
+        "website/css/twitch/twitch_desktop_styles.css",
+        "website/css/twitch/twitch_mobile_styles.css"
+      ],
+      "matches": [
+        "*://*.twitch.tv/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "css": [
+        "website/css/pinterest/pinterest_desktop_styles.css",
+        "website/css/pinterest/pinterest_mobile_styles.css"
+      ],
+      "matches": [
+        "*://*.pinterest.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "css": [
+        "website/css/netflix/netflix_desktop_styles.css",
+        "website/css/netflix/netflix_mobile_styles.css"
+      ],
+      "matches": [
+        "*://*.netflix.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "css": [
+        "website/css/tikTok/tikTok_desktop_styles.css",
+        "website/css/tikTok/tikTok_mobile_styles.css"
+      ],
+      "matches": [
+        "*://*.tiktok.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "css": [
+        "website/css/bluesky/bluesky_desktop_styles.css",
+        "website/css/bluesky/bluesky_mobile_styles.css"
+      ],
+      "matches": [
+        "*://*.bsky.app/*"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/toolbar-icon-16.png",
+      "19": "images/toolbar-icon-19.png",
+      "32": "images/toolbar-icon-32.png",
+      "38": "images/toolbar-icon-38.png",
+      "48": "images/toolbar-icon-48.png",
+      "72": "images/toolbar-icon-72.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "activeTab"
+  ]
+}

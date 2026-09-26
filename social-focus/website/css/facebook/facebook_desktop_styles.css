@@ -1,0 +1,172 @@
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_block_facebook="true"][socialFocus_site_is="facebook"]:not(
+    [socialFocus_facebook_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_master_toggle="true"][socialFocus_site_is="facebook"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_gray_mode="true"][socialFocus_site_is="facebook"]:not(
+    [socialFocus_facebook_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+/* ------------------------------------ Home Feed ------------------------------------ */
+
+/* ------------------ Hide Home Feed ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_feed_hide_home_feed="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]):has(div[role="navigation"] a[href="/"][aria-current="page"]) div[role='main'],
+
+/* ------------------ Hide Section - Stories ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_feed_hide_section_stories="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]):has(div[role="navigation"] a[href="/"][aria-current="page"]) div[role='region']:has(a[href*="stories/create"]),
+
+/* ------------------------------------ Home Feed ------------------------------------ */
+
+
+
+
+
+
+/* ------------------------------------ Header ------------------------------------ */
+
+/* ------------------ Hide Button - Friends ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_header_hide_button_friends="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="banner"] div[role="navigation"] li:has(a[href*="friends"]),
+
+/* ------------------ Hide Button - Watch ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_header_hide_button_watch="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="banner"] div[role="navigation"] li:has(a[href*="watch"]),
+
+/* ------------------ Hide Button - Groups ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_header_hide_button_groups="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="banner"] div[role="navigation"] li:has(a[href*="groups"]),
+
+/* ------------------ Hide Button - Gaming ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_header_hide_button_gaming="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="banner"] div[role="navigation"] li:has(a[href*="gaming"]),
+
+/* ------------------ Hide Button - Menu ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_header_hide_button_menu="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="banner"] div[role="navigation"] div[role="button"]:has(path[d*="2.5v3A1.5"]),
+
+/* ------------------ Hide Button - Create ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_header_hide_button_create="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="banner"] div[role="navigation"] div[role="button"]:has(path[d*="M11 19a1 1 0 1 0 2 0v-6h6a1 1 0 1 0 0-2h-6V5a1 1 0 1 0-2 0v6H5a1 1 0 1 0 0 2h6v6z"]),
+
+/* ------------------ Hide Button - Messenger  ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_header_hide_button_messanger="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="banner"] div[role="navigation"] > div:has(path[d="m106.868 921.248-1.892 2.925a.32.32 0 0 1-.443.094l-1.753-1.134a.2.2 0 0 0-.222.003l-1.976 1.363c-.288.199-.64-.143-.45-.437l1.892-2.925a.32.32 0 0 1 .443-.095l1.753 1.134a.2.2 0 0 0 .222-.003l1.976-1.363c.288-.198.64.144.45.438m-3.368-4.251c-3.323 0-5.83 2.432-5.83 5.658 0 1.642.652 3.128 1.834 4.186a.331.331 0 0 1 .111.234l.03 1.01a.583.583 0 0 0 .82.519l1.13-.5a.32.32 0 0 1 .22-.015c.541.148 1.108.223 1.685.223 3.323 0 5.83-2.432 5.83-5.657 0-3.226-2.507-5.658-5.83-5.658"]),
+
+/* ------------------ Hide Button - Notifications ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_header_hide_button_notifications="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"] > div:has(path[d="M3 9.5a9 9 0 1 1 18 0v2.927c0 1.69.475 3.345 1.37 4.778a1.5 1.5 0 0 1-1.272 2.295h-4.625a4.5 4.5 0 0 1-8.946 0H2.902a1.5 1.5 0 0 1-1.272-2.295A9.01 9.01 0 0 0 3 12.43V9.5zm6.55 10a2.5 2.5 0 0 0 4.9 0h-4.9z"]),
+
+/* ------------------------------------ Header ------------------------------------ */
+
+
+
+
+
+/* ------------------------------------ Left Navigation Bar ------------------------------------ */
+
+/* ------------------ Hide Button - Profile ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_button_profile="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"]:has(h2) a[href*="profile"],
+
+/* ------------------ Hide Button - Find Friends ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_button_friends="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"]:has(h2) a[href*="friends"],
+
+/* ------------------ Hide Button - Memories ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_button_memories="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"]:has(h2) a[href*="onthisday"],
+
+/* ------------------ Hide Button - Saved ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_button_saved="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"]:has(h2) a[href*="saved"],
+
+/* ------------------ Hide Button - Groups ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_button_groups="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"]:has(h2) a[href*="groups"],
+
+/* ------------------ Hide Button - Video ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_button_video="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"]:has(h2) a[href*="watch"],
+
+/* ------------------ Hide Button - Marketplace ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_button_marketplace="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"]:has(h2) a[href*="marketplace"],
+
+/* ------------------ Hide Button - Feeds ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_button_feeds="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"]:has(h2) a[href*="filter"],
+
+/* ------------------ Hide Button - Events ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_button_events="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"]:has(h2) a[href*="events"],
+
+
+/* ------------------ Hide Button - Ads Manager ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_button_ads_manager="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"]:has(h2) a[href*="ad_"],
+
+/* ------------------ Hide Button - Fundraisers ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_button_fundraisers="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"]:has(h2) a[href*="fundraisers"],
+
+/* ------------------ Hide Button - See More ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_button_see_more="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"]:has(h2) ul + div,
+
+/* ------------------ Hide Footer ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_left_bar_hide_footer="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="navigation"] footer,
+
+/* ------------------------------------ Left Navigation Bar ------------------------------------ */
+
+
+
+
+
+/* ------------------------------------ RIGHT BAR ------------------------------------ */
+
+/* ------------------ Hide Block - Sponsored ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_right_bar_hide_block_sponsored="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="complementary"] > div > div > div > div > div:has(a[target="_blank"]),
+
+/* ------------------ Hide Block - Contacts ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_right_bar_hide_block_contacts="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="complementary"] > div > div > div > div > div:has(a[href*="messages"]),
+
+/* ------------------ Hide Block - Group conversations ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_right_bar_hide_block_group_conversations="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[data-pagelet="RightRail"] > div[data-visualcompletion="ignore-dynamic"]:has(i[style*="rsrc.php"]),
+
+/* ------------------------------------ RIGHT BAR ------------------------------------ */
+
+
+
+
+
+/* ------------------------------------ OTHER ------------------------------------ */
+
+/* ------------------ Hide Floating Button - New Message ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_facebook_other_hide_floating_button_new_message="true"][socialFocus_site_is="facebook"]:not([socialFocus_facebook_master_toggle="true"]) div[role="button"]:has(> i[style*="https://static.xx.fbcdn.net/rsrc.php/v4"])
+
+/* ------------------------------------ OTHER ------------------------------------ */ {
+  display: none !important;
+}

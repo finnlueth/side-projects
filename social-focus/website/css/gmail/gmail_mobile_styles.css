@@ -1,0 +1,52 @@
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_gmail_block_gmail="true"][socialFocus_site_is="gmail"]:not(
+    [socialFocus_gmail_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_gmail_master_toggle="true"][socialFocus_site_is="gmail"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_gmail_gray_mode="true"][socialFocus_site_is="gmail"]:not(
+    [socialFocus_gmail_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+/* ------------------------------------ OTHER ------------------------------------ */
+
+/* ------------------ Hide Open In App Banner ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_gmail_hide_open_in_app_banner="true"][socialFocus_site_is="gmail"]:not([socialFocus_gmail_master_toggle="true"]) 
+  div#nav,
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_gmail_hide_open_in_app_banner="true"][socialFocus_site_is="gmail"]:not([socialFocus_gmail_master_toggle="true"]) 
+  div#sdppromo
+  
+/* ------------------------------------ OTHER ------------------------------------ */ {
+  display: none !important;
+}
+
+/* ------------------ Layout Fix -  Hide Open In App Banner ------------------ */
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_gmail_hide_open_in_app_banner="true"]:not(
+    [socialFocus_gmail_master_toggle="true"]
+  )
+  div#views {
+  top: 0 !important;
+}
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_gmail_hide_open_in_app_banner="false"]:not(
+    [socialFocus_gmail_master_toggle="true"]
+  )
+  div#views {
+  top: 96px !important;
+}

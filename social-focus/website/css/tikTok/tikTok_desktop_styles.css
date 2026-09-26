@@ -1,0 +1,24 @@
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_tikTok_block_tikTok="true"][socialFocus_site_is="tikTok"]:not(
+    [socialFocus_tikTok_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_tikTok_master_toggle="true"][socialFocus_site_is="tikTok"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_tikTok_gray_mode="true"][socialFocus_site_is="tikTok"]:not(
+    [socialFocus_tikTok_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */

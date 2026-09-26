@@ -1,0 +1,71 @@
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_netflix_block_netflix="true"][socialFocus_site_is="netflix"]:not(
+    [socialFocus_netflix_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_netflix_master_toggle="true"][socialFocus_site_is="netflix"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_netflix_gray_mode="true"][socialFocus_site_is="netflix"]:not(
+    [socialFocus_netflix_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+/* ------------------------------------ Others ------------------------------------ */
+
+/* ------------------ Hide Recommendations ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_netflix_hide_recommendations="true"][socialFocus_site_is="netflix"]:not(
+    [socialFocus_netflix_master_toggle="true"]
+  )
+  .lolomoRow:not([data-list-context="continueWatching"]):not(
+    [data-list-context="queue"]
+  ),
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_netflix_hide_recommendations="true"][socialFocus_site_is="netflix"]:not(
+    [socialFocus_netflix_master_toggle="true"]
+  )
+  .volatile-billboard-animations-container,
+
+
+/* ------------------ Hide Continue Watching ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_netflix_hide_continue_watching="true"][socialFocus_site_is="netflix"]:not(
+    [socialFocus_netflix_master_toggle="true"]
+  )
+  .lolomoRow[data-list-context="continueWatching"],
+
+  
+/* ------------------ Hide My List ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_netflix_hide_my_list="true"][socialFocus_site_is="netflix"]:not(
+    [socialFocus_netflix_master_toggle="true"]
+  )
+  .lolomoRow[data-list-context="queue"] {
+  display: none !important;
+}
+
+/* ------------------ Fix Layout - Hide Recommendations ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_netflix_hide_recommendations="true"][socialFocus_site_is="netflix"]:not(
+    [socialFocus_netflix_master_toggle="true"]
+  )
+  div#main-view {
+  margin-top: 5em !important;
+}
+
+/* ------------------ Fix Layout - Hide Recommendations ------------------ */
+
+/* ------------------------------------ Others ------------------------------------ */

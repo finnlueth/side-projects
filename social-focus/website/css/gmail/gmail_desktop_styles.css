@@ -1,0 +1,62 @@
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_gmail_block_gmail="true"][socialFocus_site_is="gmail"]:not(
+    [socialFocus_gmail_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_gmail_master_toggle="true"][socialFocus_site_is="gmail"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_gmail_gray_mode="true"][socialFocus_site_is="gmail"]:not(
+    [socialFocus_gmail_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+/* ------------------------------------ Right Bar ------------------------------------ */
+
+/* ------------------ Hide 'Calendar' Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_gmail_hide_calendar_button="true"][socialFocus_site_is="gmail"]:not([socialFocus_gmail_master_toggle="true"]) div[role="tablist"] div[role="tab"]:has(div[style*="calendar_2020q4_2x.png"]),
+
+/* ------------------ Hide 'Keep' Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_gmail_hide_keep_button="true"][socialFocus_site_is="gmail"]:not([socialFocus_gmail_master_toggle="true"]) div[role="tablist"] div[role="tab"]:has(div[style*="keep_2020q4v3_2x.png"]),
+
+/* ------------------ Hide 'Tasks' Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_gmail_hide_tasks_button="true"][socialFocus_site_is="gmail"]:not([socialFocus_gmail_master_toggle="true"]) div[role="tablist"] div[role="tab"]:has(div[style*="tasks_2021_2x.png"]),
+
+/* ------------------ Hide 'Contacts' Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_gmail_hide_contacts_button="true"][socialFocus_site_is="gmail"]:not([socialFocus_gmail_master_toggle="true"]) div[role="tablist"] div[role="tab"]:has(div[style*="contacts_2022_2x.png"]),
+
+/* ------------------ Hide 'Get Add-ons' Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_gmail_hide_get_addons_button="true"][socialFocus_site_is="gmail"]:not([socialFocus_gmail_master_toggle="true"]) div[role="tablist"] div[role="tab"]:has(div[style*="add_white_24dp.png"]),
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_gmail_hide_get_addons_button="true"][socialFocus_site_is="gmail"]:not([socialFocus_gmail_master_toggle="true"]) div[role="tablist"] div[role="separator"],
+
+/* ------------------------------------ Right Bar ------------------------------------ */
+
+/* ------------------------------------ Other ------------------------------------ */
+
+/* ------------------ Hide Ads ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_gmail_hide_ads="true"][socialFocus_site_is="gmail"]:not([socialFocus_gmail_master_toggle="true"])
+  div[role="tabpanel"]
+  tbody
+  tr:has(td[style*="visibility: hidden;"])
+
+/* ------------------------------------ Other ------------------------------------ */ {
+  display: none !important;
+}

@@ -1,0 +1,229 @@
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_block_twitter="true"][socialFocus_site_is="twitter"]:not(
+    [socialFocus_twitter_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_master_toggle="true"][socialFocus_site_is="twitter"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_gray_mode="true"][socialFocus_site_is="twitter"]:not(
+    [socialFocus_twitter_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+/* ------------------------------------ FEED ------------------------------------ */
+
+/* ------------------ Hide Home Timeline - For You ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_feed_hide_home_timeline_for_you="true"][socialFocus_site_is="twitter"]:not(
+    [socialFocus_twitter_master_toggle="true"]
+  )
+  body:has(
+    path[d="M21.591 7.146L12.52 1.157c-.316-.21-.724-.21-1.04 0l-9.071 5.99c-.26.173-.409.456-.409.757v13.183c0 .502.418.913.929.913H9.14c.51 0 .929-.41.929-.913v-7.075h3.909v7.075c0 .502.417.913.928.913h6.165c.511 0 .929-.41.929-.913V7.904c0-.301-.158-.584-.408-.758z"]
+  ):has(
+    nav[role="navigation"]
+      div[role="tablist"]
+      div[role="presentation"]:nth-child(1)
+      a[href="/home"][aria-selected="true"]
+  )
+  div[data-testid="primaryColumn"]
+  section[role="region"] {
+  overflow: hidden !important;
+  height: 0px !important;
+}
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_feed_hide_home_timeline_for_you="true"][socialFocus_site_is="twitter"]:not(
+    [socialFocus_twitter_master_toggle="true"]
+  )
+  div[role="tablist"]
+  div[role="presentation"]:nth-child(1):has(> a[role="tab"]) {
+  display: none !important;
+}
+
+/* ------------------ Hide Home Timeline - Following ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_feed_hide_home_timeline_following="true"][socialFocus_site_is="twitter"]:not(
+    [socialFocus_twitter_master_toggle="true"]
+  )
+  body:has(
+    path[d="M21.591 7.146L12.52 1.157c-.316-.21-.724-.21-1.04 0l-9.071 5.99c-.26.173-.409.456-.409.757v13.183c0 .502.418.913.929.913H9.14c.51 0 .929-.41.929-.913v-7.075h3.909v7.075c0 .502.417.913.928.913h6.165c.511 0 .929-.41.929-.913V7.904c0-.301-.158-.584-.408-.758z"]
+  ):has(
+    nav[role="navigation"]
+      div[role="tablist"]
+      div[role="presentation"]:nth-child(2)
+      a[href="/home"][aria-selected="true"]
+  )
+  div[data-testid="primaryColumn"]
+  section[role="region"] {
+  overflow: hidden !important;
+  height: 0px !important;
+}
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_feed_hide_home_timeline_following="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) body:has(path[d="M21.591 7.146L12.52 1.157c-.316-.21-.724-.21-1.04 0l-9.071 5.99c-.26.173-.409.456-.409.757v13.183c0 .502.418.913.929.913H9.14c.51 0 .929-.41.929-.913v-7.075h3.909v7.075c0 .502.417.913.928.913h6.165c.511 0 .929-.41.929-.913V7.904c0-.301-.158-.584-.408-.758z"]) div[role="tablist"] div[role="presentation"]:nth-child(2):has(> a[role="tab"]),
+
+/* ------------------ Hide Button - Timeline Settings ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_feed_hide_button_timeline_settings="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) a[href*="home/pinned/edit"],
+
+/* ------------------ Hide Tweet Box ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_feed_hide_tweet_box="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) div[role="progressbar"] + div:has(div[data-testid="toolBar"]),
+
+/* ------------------ Hide Posted Float Button  ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_feed_hide_posted_float_button="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) div[role="status"] button,
+
+/* ------------------ Hide Show New Posts Button  ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_feed_hide_show_new_post_button="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) div[data-testid="primaryColumn"] div[data-testid="cellInnerDiv"]:not(:has(article[data-testid="tweet"])):not(:has(div[data-testid="inlinePrompt"])),
+
+/* ------------------ Hide Information Block  ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_feed_hide_information_block="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) div[data-testid="cellInnerDiv"]:not(:has(article[data-testid="tweet"])) > div:has(div[data-testid="inlinePrompt"]),
+
+/* ------------------------------------ FEED ------------------------------------ */
+
+
+
+
+
+/* ------------------------------------ POST ------------------------------------ */
+
+/* ------------------ Hide Post Profile Pictures ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_hide_post_profile_pictures="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) article div:has(> div[data-testid="Tweet-User-Avatar"]),
+
+/* ------------------ Hide Post Images ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_hide_post_images="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) article div:has(> div[data-testid="Tweet-User-Avatar"]) + div div:has(div[aria-label="Image"]),
+
+/* ------------------ Hide Post Videos ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_hide_post_videos="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) article div:has(> div[data-testid="Tweet-User-Avatar"]) + div div:has(div[data-testid="videoPlayer"]),
+
+/* ------------------ Hide Post Metrics ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_hide_post_metrics="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) article div[role="group"]:has(button[data-testid="like"]) span[data-testid="app-text-transition-container"],
+
+/* ------------------ Hide Post Bottom Buttons ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_hide_post_bottom_buttons="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) article div[role="group"]:has(button[data-testid="like"]),
+
+/* ------------------------------------ POST ------------------------------------ */
+
+
+
+
+
+/* ------------------------------------ NAVIGATION BAR ------------------------------------ */
+
+/* ------------------ Hide Button - Home ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_button_home="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav[role="navigation"] a[href*="home"][data-testid="AppTabBar_Home_Link"],
+
+/* ------------------ Hide Notifications Dot ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_home_notifications_dot="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav[role="navigation"] a[href*="home"][data-testid="AppTabBar_Home_Link"] [aria-label*="unread"],
+
+/* ------------------ Hide Button - Explore ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_button_explore="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav[role="navigation"] a[href*="explore"],
+
+/* ------------------ Hide Button - Notifications ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_button_notifications="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav[role="navigation"] a[href*="notifications"],
+
+/* ------------------ Hide Notifications Counter ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_notifications_counter="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav[role="navigation"] a[href*="notifications"] [aria-label*="unread"],
+
+/* ------------------ Hide Button - Messages ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_button_messages="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav[role="navigation"] a[href*="messages"],
+
+/* ------------------ Hide Button - Grok ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_button_grok="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav[role="navigation"] a[href*="grok"],
+
+/* ------------------ Hide Button - List ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_button_list="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav[role="navigation"] a[href*="lists"],
+
+/* ------------------ Hide Button - Bookmarks ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_button_bookmarks="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav[role="navigation"] a[href*="bookmarks"],
+
+/* ------------------ Hide Button - Communities ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_button_communities="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav[role="navigation"] a[href*="communities"],
+
+/* ------------------ Hide Button - Premium ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_button_verified="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav[role="navigation"] a[href*="premium"],
+
+/* ------------------ Hide Button - Profile ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_button_profile="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) a[data-testid="AppTabBar_Profile_Link"],
+
+/* ------------------ Hide Button - More ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_button_more="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) button[data-testid="AppTabBar_More_Menu"],
+
+/* ------------------ Hide Button - Post ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_button_post="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"])  a[href*="compose"][data-testid="SideNav_NewTweet_Button"],
+
+/* ------------------ Hide Button - Jobs ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_jobs_button="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"])  nav[role="navigation"] a[href*="jobs"],
+
+/* ------------------ Hide Button - Verified Orgs ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_navigationBar_hide_verified_orgs_button="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav[role="navigation"] a[href*="verified-orgs"],
+
+/* ------------------------------------ NAVIGATION BAR ------------------------------------ */
+
+
+
+
+
+/* ------------------------------------ RIGHT BAR ------------------------------------ */
+
+/* ------------------ Hide Search ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_rightBar_hide_search="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) div[data-testid="sidebarColumn"] form[role="search"],
+
+/* ------------------ Hide Section - Premium Ads ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_rightBar_hide_premium_ads="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) div:has(>div > div[data-testid="super-upsell-UpsellCardRenderProperties"]),
+
+/* ------------------ Hide Section - Trends for you ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_rightBar_hide_trends_for_you="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) div[data-testid="sidebarColumn"] section[aria-labelledby*="accessible-list-"][role="region"],
+
+/* ------------------ Hide Section - Who to follow ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_rightBar_hide_who_to_follow="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) div:has(> div>aside>a[href*="connect_people"]),
+
+/* ------------------ Hide Footer ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_rightBar_hide_footer="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) nav:has(a[href*="/privacy"]):has(a[href*="/tos"]),
+
+/* ------------------ Hide Section - Live on X ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_twitter_rightBar_hide_live_on_x="true"][socialFocus_site_is="twitter"]:not([socialFocus_twitter_master_toggle="true"]) div[data-testid="sidebarColumn"] div[aria-label="Trending"] > div > div > div:has(div[data-testid="placementTracking"]) 
+/* ------------------------------------ RIGHT BAR ------------------------------------ */ {
+  display: none !important;
+}

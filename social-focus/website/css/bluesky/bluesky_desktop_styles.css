@@ -1,0 +1,266 @@
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_block_blueSky="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_master_toggle="true"][socialFocus_site_is="blueSky"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_gray_mode="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+/* ------------------------------------ Feed ------------------------------------ */
+
+/* ------------------ Hide Discover Section ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_feed_hide_discover_section="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  div[data-testid="customFeedPage-feed"],
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_feed_hide_discover_section="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  div[data-testid="homeScreenFeedTabs-selector-0"],
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_feed_hide_discover_section="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  a[href*="Fapp.bsky.feed.generator"] {
+  display: none !important;
+}
+
+/* ------------------ Hide Following Section ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_feed_hide_home_following="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  div[data-testid="followingFeedPage-feed"],
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_feed_hide_home_following="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  div[data-testid="homeScreenFeedTabs-selector-1"],
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_feed_hide_home_following="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  a[href="/?feed=following"] {
+  display: none !important;
+}
+
+/* ------------------ Hide Feed Settings ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_feed_hide_feed_settings="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  a[href="/feeds"]:not(nav[role="navigation"] a[href="/feeds"]) {
+  display: none !important;
+}
+
+/* ------------------ Hide Feed Settings - Fix Layout ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_feed_hide_feed_settings="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  div[data-testid="HomeScreen"]
+  > div
+  > div:first-child {
+  height: 48px !important;
+}
+
+/* ------------------------------------ Feed ------------------------------------ */
+
+/* ------------------------------------ Post ------------------------------------ */
+
+/* ------------------ Hide Post User Avatar ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_hide_post_profile_pictures="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  div[data-testid="customFeedPage-feed"]
+  a[href*="/profile/"]:has(div[data-testid="userAvatarImage"]) {
+  display: none !important;
+}
+
+/* ------------------ Hide Post Image ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_hide_post_images="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  div[data-testid="customFeedPage-feed"]
+  div[data-testid="contentHider-post"]
+  div[style="padding-bottom: 4px;"]:has(img) {
+  display: none !important;
+}
+
+/* ------------------ Hide Post Video ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_hide_post_videos="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  div[data-testid="customFeedPage-feed"]
+  div[data-testid="contentHider-post"]
+  > div:last-child
+  > div
+  > div
+  > div
+  > div:first-child
+  > div {
+  padding: 0 !important;
+}
+
+/* ------------------ Hide Bottom Buttons ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_hide_post_bottom_buttons="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  div[data-testid="customFeedPage-feed"]
+  div[data-testid="contentHider-post"]
+  + div {
+  display: none !important;
+}
+
+/* ------------------------------------ Post ------------------------------------ */
+
+/* ------------------------------------ Navigation Bar ------------------------------------ */
+
+/* ------------------ Hide Home Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_navigationBar_hide_button_home="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  nav[role="navigation"]
+  a[href="/"] {
+  display: none !important;
+}
+
+/* ------------------ Hide Search Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_navigationBar_hide_button_search="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  nav[role="navigation"]
+  a[href="/search"] {
+  display: none !important;
+}
+
+/* ------------------ Hide Notifications Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_navigationBar_hide_button_notifications="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  nav[role="navigation"]
+  a[href="/notifications"] {
+  display: none !important;
+}
+
+/* ------------------ Hide Chat Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_navigationBar_hide_button_chat="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  nav[role="navigation"]
+  a[href="/messages"] {
+  display: none !important;
+}
+
+/* ------------------ Hide Feeds Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_navigationBar_hide_button_feeds="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  nav[role="navigation"]
+  a[href="/feeds"] {
+  display: none !important;
+}
+
+/* ------------------ Hide Lists Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_navigationBar_hide_button_lists="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  nav[role="navigation"]
+  a[href="/lists"] {
+  display: none !important;
+}
+
+/* ------------------ Hide Profile Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_navigationBar_hide_button_profile="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  nav[role="navigation"]
+  a[href*="/profile/"]:has(
+    path[d="M12 4a8 8 0 0 0-5.935 13.365C7.56 15.895 9.612 15 12 15c2.388 0 4.44.894 5.935 2.365A8 8 0 0 0 12 4Zm4.412 14.675C15.298 17.636 13.792 17 12 17c-1.791 0-3.298.636-4.412 1.675A7.96 7.96 0 0 0 12 20a7.96 7.96 0 0 0 4.412-1.325ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10a9.98 9.98 0 0 1-3.462 7.567A9.965 9.965 0 0 1 12 22a9.965 9.965 0 0 1-6.538-2.433A9.98 9.98 0 0 1 2 12Zm10-4a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-4 2a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Hide Settings Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_navigationBar_hide_button_settings="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  nav[role="navigation"]
+  a[href*="/settings"] {
+  display: none !important;
+}
+
+/* ------------------ Hide New Post Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_navigationBar_hide_button_new_post="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  button:has(
+    path[d="M 20 9 L 20 16 C 20 18.209 18.209 20 16 20 L 8 20 C 5.791 20 4 18.209 4 16 L 4 8 C 4 5.791 5.791 4 8 4 L 15 4"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------------------------ Navigation Bar ------------------------------------ */
+
+/* ------------------------------------ Right Bar ------------------------------------ */
+
+/* ------------------ Hide Search Bar ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_rightBar_hide_search="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  div:has(> input[role="search"]) {
+  display: none !important;
+}
+
+/* ------------------ Hide Getting Started Section ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_rightBar_hide_getting_started_section="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  )
+  nav[role="navigation"]
+  + div
+  > div:has(path[d*="A8.5 8.5 0 1 1 10"]) {
+  display: none !important;
+}
+
+/* ------------------ Hide Footer ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_blueSky_rightBar_hide_footer="true"][socialFocus_site_is="blueSky"]:not(
+    [socialFocus_blueSky_master_toggle="true"]
+  ) nav[role="navigation"]
+  + div
+  > div:has(a[href="https://bsky.social/about/support/privacy-policy"])
+{
+  display: none !important;
+}
+
+/* ------------------------------------ Right Bar ------------------------------------ */

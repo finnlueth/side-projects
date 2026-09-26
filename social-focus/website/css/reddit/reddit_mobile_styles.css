@@ -1,0 +1,138 @@
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_block_reddit="true"][socialFocus_site_is="reddit"]:not(
+    [socialFocus_reddit_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_master_toggle="true"][socialFocus_site_is="reddit"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_gray_mode="true"][socialFocus_site_is="reddit"]:not(
+    [socialFocus_reddit_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+/* ------------------------------------ HOME FEED ------------------------------------ */
+
+/* ------------------ Hide Home Feed ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_home_feed_hide_home_feed="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]):not(:has(.community-banner)) shreddit-feed:not(:has(shreddit-profile-comment)),
+
+/* ------------------ Hide Related Posts ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_home_feed_hide_related_posts="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) shreddit-feed article:has([recommendation-source]),
+
+/* ------------------------------------ HOME FEED ------------------------------------ */
+
+
+
+
+
+
+/* ------------------------------------ HEADER ------------------------------------ */
+
+/* ------------------ Hide Button - Burger ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_header_hide_button_burger="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) header faceplate-tracker[noun="hamburger_menu"],
+
+/* ------------------ Hide Logo ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_header_hide_logo="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) header faceplate-tracker[noun="reddit_logo"],
+
+/* ------------------ Hide Button - Search ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_header_hide_button_search="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) header button#expand-search-button,
+
+/* ------------------ Hide Button - Log In ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_header_hide_log_in_button="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) header faceplate-tracker[noun="auth_header_login"],
+
+/* ------------------ Hide Button - Create Post ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_header_hide_button_create_post="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) header faceplate-tracker[noun="create_post"],
+
+/* ------------------ Hide Button - Notifications ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_header_hide_button_notifications="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) header faceplate-tracker[noun="inbox"],
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_header_hide_button_notifications="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) header div:has(> faceplate-tracker[noun="inbox"] + div.absolute),
+
+/* ------------------ Hide Button - Account / Settings Menu ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_header_hide_button_settings_menu="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) header button#expand-user-drawer-button,
+
+/* ------------------ Hide Button - Use App ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_header_hide_button_use_app="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) header xpromo-top-button[app-link-params],
+
+/* ------------------------------------ HEADER ------------------------------------ */
+
+
+
+
+
+/* ------------------------------------ SUBREDDIT ------------------------------------ */
+
+/* ------------------ Hide Subreddit Feed ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_subreddit_hide_subreddit_feed="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]):has(.community-banner) main > div,
+
+/* ------------------ Hide 'Create a Post' Button  ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_subreddit_hide_create_post_button="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]):has(#subreddit-right-rail__partial)  create-post-entry-point-wrapper:has(> faceplate-tracker[noun="create_post"] a[class*="button-bordered"]),
+
+/* ------------------ Hide Header Buttons ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_subreddit_hide_header_buttons="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]):has(#subreddit-right-rail__partial) shreddit-subreddit-header-buttons {
+  display: none !important;
+}
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_subreddit_hide_header_buttons="true"][socialFocus_site_is="reddit"]:not(
+    [socialFocus_reddit_master_toggle="true"]
+  ):has(#subreddit-right-rail__partial)
+  span:has(> create-post-entry-point-wrapper) {
+  margin-right: 0px !important;
+}
+
+/* ------------------------------------ SUBREDDIT ------------------------------------ */
+
+/* ------------------------------------ POST ------------------------------------ */
+
+/* ------------------ Hide Comments ------------------ */
+
+/* --- Log In ---- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_post_hide_comments="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) faceplate-batch[target="#comment-tree"],
+
+/* --- Log Out ---- */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_post_hide_comments="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) .CommentTree,
+
+/* ------------------ Hide Related Posts ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_post_hide_related_posts="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) #right-sidebar-container div[data-slug="pdp_right_rail_related"],
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_post_hide_related_posts="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) #right-sidebar-container h2,
+
+/* ------------------------------------ POST ------------------------------------ */
+
+/* ------------------------------------ OTHER ------------------------------------ */
+
+/* ------------------ Hide Open In App Banner ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_reddit_hide_open_in_app_banner="true"][socialFocus_site_is="reddit"]:not([socialFocus_reddit_master_toggle="true"]) faceplate-bottom-sheet#xpromo-bottom-sheet
+
+/* ------------------------------------ OTHER ------------------------------------ */ {
+  display: none !important;
+}

@@ -1,0 +1,45 @@
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_pinterest_block_pinterest="true"][socialFocus_site_is="pinterest"]:not(
+    [socialFocus_pinterest_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_pinterest_master_toggle="true"][socialFocus_site_is="pinterest"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_pinterest_gray_mode="true"][socialFocus_site_is="pinterest"]:not(
+    [socialFocus_pinterest_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+/* ------------------------------------ Others ------------------------------------ */
+
+/* ------------------ Hide Search Suggestion ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_pinterest_hide_search_suggestion="true"][socialFocus_site_is="pinterest"]:not(
+    [socialFocus_pinterest_master_toggle="true"]
+  )
+  div[data-test-id="typeaheadResults"]
+  > div
+  > div:not(:has(div[data-test-id="recent-query"])),
+
+/* ------------------ Hide Video Pins ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="desktop"][socialFocus_pinterest_hide_video_pins="true"][socialFocus_site_is="pinterest"]:not(
+    [socialFocus_pinterest_master_toggle="true"]
+  ) div[role="listitem"]:has(video) {
+  display: none !important;
+}
+
+/* ------------------------------------ Others ------------------------------------ */

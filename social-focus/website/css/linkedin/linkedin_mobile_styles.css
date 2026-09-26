@@ -1,0 +1,86 @@
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_block_linkedin="true"][socialFocus_site_is="linkedin"]:not(
+    [socialFocus_linkedin_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_master_toggle="true"][socialFocus_site_is="linkedin"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_gray_mode="true"][socialFocus_site_is="linkedin"]:not(
+    [socialFocus_linkedin_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+/* ------------------------------------ HOME FEED ------------------------------------ */
+
+/* ------------------ Hide Home Feed ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_home_feed_hide_home_feed="true"][socialFocus_site_is="linkedin"]:not([socialFocus_linkedin_master_toggle="true"]) .feeds,
+
+/* ------------------ Hide Home Feed Promoted Posts ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_home_feed_hide_home_feed_promoted_posts="true"][socialFocus_site_is="linkedin"]:not([socialFocus_linkedin_master_toggle="true"]) .feeds .feed-item:has(a[target="_blank"]):has(article[data-sponsored-tracking-url]),
+
+/* ------------------ Hide Post Bottom Buttons ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_home_feed_hide_post_bottom_buttons="true"][socialFocus_site_is="linkedin"]:not([socialFocus_linkedin_master_toggle="true"]) .feeds .feed-item .social-action-bar,
+
+/* ------------------ Hide Suggested Posts ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_home_page_suggested_posts="true"][socialFocus_site_is="linkedin"]:not([socialFocus_linkedin_master_toggle="true"]) article[data-id="main-feed-card"]:has(a[data-feed-control="update_topbar_actor"]), 
+
+/* ------------------------------------ HOME FEED ------------------------------------ */
+
+
+
+
+
+/* ------------------------------------ BOTTOM BAR ------------------------------------ */
+
+/* ------------------ Hide Button - Home ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_bottomBar_hide_button_home="true"][socialFocus_site_is="linkedin"]:not([socialFocus_linkedin_master_toggle="true"]) #primary-nav li[data-nav-type="HOME"],
+
+/* ------------------ Hide Button - My Network ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_bottomBar_hide_button_my_network="true"][socialFocus_site_is="linkedin"]:not([socialFocus_linkedin_master_toggle="true"]) #primary-nav li[data-nav-type="NETWORK"],
+
+/* ------------------ Hide Button - Post ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_bottomBar_hide_button_post="true"][socialFocus_site_is="linkedin"]:not([socialFocus_linkedin_master_toggle="true"]) #primary-nav li[data-nav-type="POST"],
+
+/* ------------------ Hide Button - Notifications ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_bottomBar_hide_button_notifications="true"][socialFocus_site_is="linkedin"]:not([socialFocus_linkedin_master_toggle="true"]) #primary-nav li[data-nav-type="NOTIFICATIONS"],
+
+/* ------------------ Hide Button - Jobs ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_bottomBar_hide_button_jobs="true"][socialFocus_site_is="linkedin"]:not([socialFocus_linkedin_master_toggle="true"]) #primary-nav li[data-nav-type="JOBS"],
+
+/* ------------------------------------ BOTTOM BAR ------------------------------------ */
+
+
+
+
+
+/* ------------------------------------ OTHER ------------------------------------ */
+
+/* ------------------ Hide Open in App Banner ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_linkedin_other_hide_open_in_app_banner="true"][socialFocus_site_is="linkedin"]:not([socialFocus_linkedin_master_toggle="true"]) div[aria-labelledby="upsell-banner-title"]
+
+/* ------------------------------------ OTHER ------------------------------------ */ {
+  display: none !important;
+}

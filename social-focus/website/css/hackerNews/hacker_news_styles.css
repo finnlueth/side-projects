@@ -1,0 +1,107 @@
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_block_hacker-news="true"][socialFocus_site_is="hacker-news"]:not(
+    [socialFocus_hacker-news_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_master_toggle="true"][socialFocus_site_is="hacker-news"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_gray_mode="true"][socialFocus_site_is="hacker-news"]:not(
+    [socialFocus_hacker-news_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+/* ------------------------------------ Navigation ------------------------------------ */
+
+/* ------------------ Hide New ------------------ */
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_navigation_hide_new="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]) a[href="newest"], 
+
+/* ------------------ Hide Past ------------------ */
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_navigation_hide_past="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]) a[href="front"],
+
+/* ------------------ Hide Comments ------------------ */
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_navigation_hide_comments="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]) a[href="newcomments"],
+
+/* ------------------ Hide Ask ------------------ */
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_navigation_hide_ask="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]) a[href="ask"],
+
+/* ------------------ Hide Show ------------------ */
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_navigation_hide_show="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]) a[href="show"],
+
+/* ------------------ Hide Jobs ------------------ */
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_navigation_hide_jobs="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]) a[href="jobs"],
+
+/* ------------------ Hide Submit ------------------ */
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_navigation_hide_submit="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]) a[href="submit"],
+
+/* ------------------------------------ Navigation ------------------------------------ */
+
+
+
+
+/* ------------------------------------ Post ------------------------------------ */
+
+/* ------------------ Hide Domain ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_post_hide_domain="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]):not(:has(table.comment-tree)) span.sitebit.comhead,
+
+/* ------------------ Hide Vote Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_post_hide_vote_button="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]):not(:has(table.comment-tree)) td.votelinks a[href*="vote"],
+
+/* ------------------ Hide "Hide" Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_post_hide_hide_button="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]):not(:has(table.comment-tree)) td.subtext a[href*="hide"],
+
+/* ------------------ Hide Points Count ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_post_hide_points_count="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]):not(:has(table.comment-tree)) td.subtext span.score,
+
+/* ------------------ Hide Time ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_post_hide_time="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]):not(:has(table.comment-tree)) span.age,
+
+/* ------------------ Hide Comments Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_post_hide_comments_button="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]):not(:has(table.comment-tree)) td.subtext span.subline > a:last-of-type,
+
+/* ------------------------------------ Post ------------------------------------ */
+
+
+
+
+/* ------------------------------------ Comments ------------------------------------ */
+
+/* ------------------ Hide Comments Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_comments_hide_comments="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]) table.comment-tree,
+
+/* ------------------ Hide Reply Button ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_comments_hide_reply_buttons="true"][socialFocus_site_is="hacker-news"]:not([socialFocus_hacker-news_master_toggle="true"]) div.reply
+
+/* ------------------------------------ Comments ------------------------------------ */ {
+  display: none;
+}
+
+/* ------------------------------------ Post - Hide Vote Button - fix ui after hide this element ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_hacker-news_post_hide_vote_button="true"][socialFocus_site_is="hacker-news"]:not(
+    [socialFocus_hacker-news_master_toggle="true"]
+  ):not(:has(table.comment-tree))
+  td.votelinks {
+  width: 14px !important;
+  height: 19px !important;
+}

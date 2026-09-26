@@ -1,0 +1,273 @@
+/* ------------------------------------ Essentials ------------------------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_block_youtube="true"][socialFocus_site_is="youtube"]:not(
+    [socialFocus_youtube_master_toggle="true"]
+  ) {
+  display: none !important;
+}
+
+/* ------------------ Display Timer On Site ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_master_toggle="true"][socialFocus_site_is="youtube"]
+  #timeModal {
+  display: none !important;
+}
+
+/* ------------------ Gray Mode ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_gray_mode="true"][socialFocus_site_is="youtube"]:not(
+    [socialFocus_youtube_master_toggle="true"]
+  ) {
+  filter: grayscale(1) !important;
+}
+
+/* ------------------------------------ Essentials ------------------------------------ */
+
+/* ------------------ Hide Home Recommended Videos ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_home_recommended_videos="true"][socialFocus_site_is="youtube"]:not(
+    [socialFocus_youtube_master_toggle="true"]
+  )
+  .rich-grid-renderer-contents:has(ytm-video-with-context-renderer),
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_home_recommended_videos="true"][socialFocus_site_is="youtube"]:not(
+    [socialFocus_youtube_master_toggle="true"]
+  )
+  .rich-grid-renderer-header.rich-grid-sticky-header {
+  display: none !important;
+}
+
+/* ------------------ Hide Video Page Related Videos ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_related_videos="true"][socialFocus_site_is="youtube"]:not(
+    [socialFocus_youtube_master_toggle="true"]
+  ):has(ytm-watch)
+  ytm-item-section-renderer[section-identifier="related-items"] {
+  display: none !important;
+}
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_related_videos="true"][socialFocus_site_is="youtube"]:not(
+    [socialFocus_youtube_master_toggle="true"]
+  ):has(ytm-watch)
+  ytm-single-column-watch-next-results-renderer
+  ytm-item-section-renderer[section-identifier="related-items"]:nth-child(2) {
+  display: flex !important;
+  visibility: hidden !important;
+}
+
+/* ------------------ Hide Shorts ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_shorts="true"][socialFocus_site_is="youtube"]:not([socialFocus_youtube_master_toggle="true"]) ytm-reel-shelf-renderer,
+
+/*** Home Feed Extra Rows ***/
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_shorts="true"][socialFocus_site_is="youtube"]:not([socialFocus_youtube_master_toggle="true"]) ytm-browse ytm-rich-grid-renderer .rich-grid-renderer-contents ytm-rich-section-renderer,
+
+/** Channel Page **/
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_shorts="true"][socialFocus_site_is="youtube"]:not([socialFocus_youtube_master_toggle="true"])  ytm-browse:has(ytm-c4-tabbed-header-renderer) ytm-single-column-browse-results-renderer .single-column-browse-results-tab-bar.cbox[is-channel="true"] a[role="tab"][href*="/shorts"],
+
+/*** Search ***/
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_shorts="true"][socialFocus_site_is="youtube"]:not([socialFocus_youtube_master_toggle="true"]) ytm-search ytm-video-with-context-renderer:has(a[href*="shorts"]),
+
+/*** Subscriptions ***/
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_shorts="true"][socialFocus_site_is="youtube"]:not([socialFocus_youtube_master_toggle="true"]) ytm-browse:has(div[tab-identifier="FEsubscriptions"]) ytm-item-section-renderer:has(a[href*="shorts"]),
+
+/*** Video Page ***/
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_shorts="true"]:not([socialFocus_youtube_master_toggle="true"]) ytm-item-section-renderer[data-content-type="related"] ytm-video-with-context-renderer:has(a[href*="shorts/"]),
+
+/*** Bottom Bar ***/
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_shorts="true"][socialFocus_site_is="youtube"]:not([socialFocus_youtube_master_toggle="true"]) ytm-pivot-bar-renderer:has(.pivot-bar-item-tab) ytm-pivot-bar-item-renderer:nth-child(2),
+
+/* ------------------ Hide Comments ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_comments="true"][socialFocus_site_is="youtube"]:not([socialFocus_youtube_master_toggle="true"]) ytm-comments-entry-point-header-renderer,
+
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_comments="true"][socialFocus_site_is="youtube"]:not([socialFocus_youtube_master_toggle="true"]) .ytVideoMetadataCarouselViewModelHost,
+
+/* ------------------ Hide Explore ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_explore="true"][socialFocus_site_is="youtube"]:not([socialFocus_youtube_master_toggle="true"]) ytm-chip-cloud-chip-renderer[chip-style="STYLE_EXPLORE_LAUNCHER_CHIP"],
+
+/* ------------------ Hide Subscriptions ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_subscriptions="true"][socialFocus_site_is="youtube"]:not([socialFocus_youtube_master_toggle="true"]) ytm-pivot-bar-renderer:has(.pivot-bar-item-tab) ytm-pivot-bar-item-renderer:nth-child(3),
+
+/* ------------------ Hide Video Endscreen ------------------ */
+
+
+/* ------------------ Hide Thumbnails ------------------ */
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]  ytm-hero-playlist-thumbnail-renderer,
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"] .video-thumbnail-img,
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"] ytm-thumbnail-cover > span,
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"] .video-preview-shim,
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"] .ShortsLockupViewModelHostThumbnailContainer {
+  display: none !important;
+}
+
+/* ------------------ Fix - Hide Comments ------------------ */
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_comments="true"][socialFocus_site_is="youtube"]:not(
+    [socialFocus_youtube_master_toggle="true"]
+  )
+  body {
+  position: static !important;
+}
+
+html[socialFocus_global_enable="true"][socialFocus_device_type="mobile"][socialFocus_youtube_hide_comments="true"][socialFocus_site_is="youtube"]:not(
+    [socialFocus_youtube_master_toggle="true"]
+  )
+  ytm-engagement-panel-section-list-renderer.engagement-panel-comments-section {
+  display: none !important;
+}
+
+/* ------------------ Fix - Hide Comments ------------------ */
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-thumbnail-cover {
+  overflow: inherit !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-shorts-lockup-view-model {
+  height: inherit !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-thumbnail-overlay-time-status-renderer {
+  display: block !important;
+  margin: 0px !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  .ShortsLockupViewModelHostInlineMetadata {
+  background: none !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-thumbnail-overlay-time-status-renderer,
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  .video-thumbnail-overlay-bottom-left-right-group,
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  .ShortsLockupViewModelHostInlineMetadata {
+  position: static !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-thumbnail-cover,
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-compact-thumbnail {
+  padding-bottom: 0px !important;
+  height: inherit !important;
+  width: inherit !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-compact-thumbnail
+  .video-thumbnail-overlay-bottom-group {
+  position: static !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-thumbnail-overlay-time-status-renderer
+  badge-shape {
+  background-color: inherit !important;
+  padding: 0px !important;
+  line-height: inherit !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-media-item:has(ytm-thumbnail-cover) {
+  flex-direction: column !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-media-item:has(ytm-thumbnail-cover)
+  .details {
+  padding: 0px !important;
+  margin: 0px !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-video-preview {
+  display: none !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-thumbnail-overlay-resume-playback-renderer {
+  display: none !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-media-item {
+  padding: 12px !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-media-item
+  .video-thumbnail-container-large:before {
+  padding-top: 0px !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-playlist-card-renderer
+  .stacked,
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-media-item
+  .stacked {
+  border: none !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  .compact-media-item {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-compact-thumbnail {
+  justify-content: left !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  .compact-media-item-metadata-content {
+  padding: 0px !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  .video-thumbnail-overlay-bottom-icon-text {
+  position: static !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  yt-collections-stack
+  :is(
+    .collections-stack-wiz__collection-stack2,
+    .collections-stack-wiz__collection-stack1
+  ) {
+  display: none !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  yt-collections-stack
+  .video-thumbnail-overlay-bottom-icon-text {
+  margin: 0 !important;
+  justify-content: left !important;
+  background: none !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  .media-item-thumbnail-container.stacked {
+  margin-top: 0px !important;
+  margin-left: 0px !important;
+}
+
+html[socialFocus_device_type="mobile"][socialFocus_global_enable="true"][socialFocus_youtube_hide_thumbnails="true"]
+  ytm-thumbnail-cover.stacked {
+  justify-content: left !important;
+}
