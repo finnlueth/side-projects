@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="-1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable = no" />
+    <meta charset="utf-8" />
+
+    <title>Welcome to United Wi-Fi℠</title>
+
+    <link rel="stylesheet" href="/css/united.min.css" />
+    <link rel="stylesheet" href="/css/GAM.css" />
+
+    <!--/unique pages css includes/-->
+    
+    <link rel="stylesheet" href="/css/product.css" />
+    <link rel="stylesheet" href="/css/partner_TMoProduct.css" />
+    <link rel="stylesheet" href="/css/partners/tmobile/partner_TMoProductV2.css" />
+
+
+    <!--/Primary Javascript imports/-->
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/lib/jquery-validation/dist/jquery.validate.js"></script>
+    <script src="/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+    <script src="/lib/bootstrap/popper.min.js"></script>
+    <script src="/lib/bootstrap/bootstrap.min.js"></script>
+    <script src="/js/desktop-hamburger-menu.js"></script>
+    <script src="/js/GAM.js"></script>
+
+    
+
+</head>
+
+<body class="h-100">
+    <div class="container h-100">
+        <header class="gradientBtnSecondary">
+    <div id="navbar">
+        <a href="#" class="menubtn" title="Menu"></a>
+        <div id="hamburgermenu">
+            <ul id="mobileMenu">
+                <!-- X - Back Button for Hamburger Menu -->
+                <li class="hamburgerTileWrapper">
+                    <a href="#" class="hamburgerMenuCloseButton click-event" alt="Close Menu" id="mMenuOpenCloseAhref"
+                       data-owp-analytics-on="click" data-owp-analytics-name='MobileMenu'
+                       data-owp-analytics-attrs="Item:Close">
+                        <div class="hamburgerTile" id="hamburger-close-href-div">
+                            <div class="hamburgerTileTitle">
+                                <span class="flex-cont">
+                                    <img class="MenuIcon" src="/img/menu/close.svg" />
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+
+                <hr class="hamburgerTileDivider1">
+
+                <li class="hamburgerTileWrapper borderRight mobileHomeLink" id="mHome">
+                    <div id="selectedPage"></div>
+                    <a href="https://www.unitedwifi.com/content/home/index.html" data-owp-analytics-on="click"
+                       data-owp-analytics-name='MobileMenu' data-owp-analytics-attrs="Item:Home" id="mobile-menu-home"
+                       class="click-event">
+                        <div class="hamburgerTile">
+                            <div class="hamburgerTileTitle">
+                                <span class="flex-cont">
+                                    <img class="MenuIcon" src="/img/menu/home.svg"></img>
+                                </span>
+                                <span class="MenuItem">
+                                    <span class="hamburgerTitle">Home</span>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+
+                <hr class="hamburgerTileDivider8 ">
+
+                <li class="borderRight borderLeft hamburgerTileWrapper messageContent" id="mMessaging">
+                    <div id="selectedPage"></div>
+                    <a href="https://www.unitedwifi.com/portal/l/gotoground?path=/login/freeproduct"
+                       data-owp-analytics-on='click' data-owp-analytics-name='MobileMenu'
+                       data-owp-analytics-attrs="Item:Messaging" class="click-event" id="mobile-menu-messaging">
+                        <div class="hamburgerTile">
+                            <div class="hamburgerTileTitle">
+                                <span class="flex-cont">
+                                    <img class="MenuIcon" src="/img/menu/messaging-white.svg"></img>
+                                </span>
+                                <span class="MenuItem">
+                                    <span class="hamburgerTitle">Messaging</span>
+                                </span>
+                            </div>
+                            <div class="hamburgerTilePriceWrapper">
+                                <span class="tilePrice" fillColorGreen>Free</span>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+
+                <hr class="hamburgerTileDivider1 messageDivider">
+
+                <li class="borderRight borderLeft hamburgerTileWrapper" id="mWifi">
+                    <div id="selectedPage"></div>
+                    <a href="https://www.unitedwifi.com/portal/l/tiers" data-owp-analytics-on='click'
+                       data-owp-analytics-name='MobileMenu' data-owp-analytics-attrs="Item:Wifi" class="click-event"
+                       id="mobile-menu-wifi">
+                        <div class="hamburgerTile">
+                            <div class="hamburgerTileTitle">
+                                <span class="flex-cont">
+                                    <img class="MenuIcon" id="mWifiIcon" src="/img/menu/wifi-black.svg"></img>
+                                </span>
+                                <span class="MenuItem" id="hamburger-internet">
+                                    <span class="hamburgerTitle">Wi-Fi</span>
+                                </span>
+                            </div>
+
+                            <div class="hamburgerTilePriceNoPillWrapper" id="internet-hamburger">
+                                <span>
+                                        <p class='bold'>
+                                            Available to buy
+                                        </p>
+                                        <span>view price details</span>
+                                </span>
+
+                            </div>
+                        </div>
+                    </a>
+                </li>
+
+                <hr class="hamburgerTileDivider1">
+
+                <!--Entertainment Hamburger Tiles-->
+                <li class="borderRight borderLeft hamburgerTileWrapper" id="mEntertainment">
+                    <div id="selectedPage"></div>
+                    <a href="https://www.unitedwifi.com/content/pde/index.html" data-owp-analytics-on='click'
+                       data-owp-analytics-name='MobileMenu' data-owp-analytics-attrs="Item:Entertainment"
+                       class="click-event" id="mobile-menu-entertainment">
+                        <div class="hamburgerTile">
+                            <div class="hamburgerTileTitle">
+                                <span class="flex-cont">
+                                    <img class="MenuIcon" src="/img/menu/entertainment3x.png"></img>
+                                </span>
+                                <span class="MenuItem">
+                                    <span class="hamburgerTitle">Entertainment</span>
+                                </span>
+                            </div>
+                            <div class="hamburgerTilePriceWrapper">
+                                <span class="tilePrice" fillColorGreen>Free</span>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+
+                <hr class="hamburgerTileDivider1">
+
+                <li class="borderRight borderLeft hamburgerTileWrapper" id="mPartner">
+                    <div id="selectedPage"></div>
+                    <a href="https://www.unitedwifi.com/content/home/partners.html" data-owp-analytics-on='click'
+                       data-owp-analytics-name='MobileMenu' data-owp-analytics-attrs="Item:Partner" class="click-event"
+                       id="mobile-menu-partner-sites">
+                        <div class="hamburgerTile">
+                            <div class="hamburgerTileTitle">
+                                <span class="flex-cont">
+                                    <img class="MenuIcon" src="/img/menu/partnersites.svg"></img>
+                                </span>
+                                <span class="MenuItem">
+                                    <span class="hamburgerTitle">Partner&nbsp;sites</span>
+                                </span>
+                            </div>
+                            <div class="hamburgerTilePriceWrapper">
+                                <span class="tilePrice" fillColorGreen>Free</span>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+
+                <hr class="hamburgerTileDivider8">
+
+                <li class="borderRight borderLeft hamburgerTileWrapper" id="mSupport">
+                    <div id="selectedPage"></div>
+                    <a href="https://www.unitedwifi.com/content/home/supporttopics.html" data-owp-analytics-on='click'
+                       data-owp-analytics-name='MobileMenu' data-owp-analytics-attrs="Item:Support" class="click-event"
+                       id="mobile-menu-support">
+                        <div class="hamburgerTile">
+                            <div class="hamburgerTileTitle">
+                                <span class="flex-cont">
+                                    <img class="MenuIcon" src="/img/menu/support.svg"></img>
+                                </span>
+                                <span class="MenuItem">
+                                    <span class="hamburgerTitle">Support</span>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+
+                <hr class="hamburgerTileDivider1">
+
+                <li class="borderLeft hamburgerTileWrapper" id="mFeedback">
+                    <div id="selectedPage"></div>
+                    <a href="https://www.unitedwifi.com/content/home/feedback.html" data-owp-analytics-on='click'
+                       data-owp-analytics-name='MobileMenu' data-owp-analytics-attrs="Item:Feedback"
+                       class="click-event" id="mobile-menu-feedback">
+                        <div class="hamburgerTile">
+                            <div class="hamburgerTileTitle">
+                                <span class="flex-cont">
+                                    <img class="MenuIcon" src="/img/menu/feedback.svg">
+                                </span>
+                                <span class="MenuItem">
+                                    <span class="hamburgerTitle">Feedback</span>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+
+                <hr class="hamburgerTileDivider1">
+            </ul>
+
+            <div id="desktopMenuContainer">
+                <ul id="desktopMenu">
+                    <li class="" id="dWifi" selected>
+            <a href="https://www.unitedwifi.com/portal/l/tiers" data-owp-analytics-on='click'
+               data-owp-analytics-name='DesktopMenu' data-owp-analytics-attrs="Item:Wifi" class="click-event"
+               id="desktop-menu-wifi">
+                <span class="MenuItem">Wi-Fi</span>
+            </a>
+                    </li>
+            
+                    <li class="" id="dEntertainment">
+            <a href="https://www.unitedwifi.com/content/pde/index.html" ddata-owp-analytics-on='click'
+               class="click-event" data-owp-analytics-name='DesktopMenu'
+               data-owp-analytics-attrs="Item:Entertainment" id="desktop-menu-entertainment">
+                <span class="MenuItem">Entertainment</span>
+            </a>
+                    </li>
+            
+                    <li class="" id="dPartner">
+            <a href="https://www.unitedwifi.com/content/home/partners.html" data-owp-analytics-on='click'
+               data-owp-analytics-name='DesktopMenu' data-owp-analytics-attrs="Item:Partner"
+               class="click-event" id="desktop-menu-partners">
+                <span class="MenuItem">Partner&nbsp;sites</span>
+            </a>
+                    </li>
+            
+                    <li class="" id="dSupport">
+            <a href="https://www.unitedwifi.com/content/home/supporttopics.html" data-owp-analytics-on='click'
+               data-owp-analytics-name='DesktopMenu' data-owp-analytics-attrs="Item:Support"
+               class="click-event" id="desktop-menu-support">
+                <span class="MenuItem">Support</span>
+            </a>
+                    </li>
+            
+                    <li class="" id="dFeedback">
+            <a href="https://www.unitedwifi.com/content/home/feedback.html" data-owp-analytics-on='click'
+               data-owp-analytics-name='DesktopMenu' data-owp-analytics-attrs="Item:Feedback"
+               class="click-event" id="desktop-menu-feedback">
+                <span class="MenuItem">Feedback</span>
+            </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="overlay"></div>
+</header>
+       <div class="row align-items-center justify-content-center header" id="portalHeader">
+            <a href="https://www.unitedwifi.com/" aria-hidden="true" alt="United Wi-Fi Home">
+                <img src="/img/united-lock-up.svg" class="img-fluid logo">
+            </a>
+        </div>
+
+        
+
+
+<div class="row">
+    
+
+
+</div>
+
+<div class="d-flex flex-column align-items-center justify-content-center my-4">
+    <svg xmlns="http://www.w3.org/2000/svg" width="225" height="46" viewBox="0 0 225 46" fill="none" class="TMO-logo">
+        <g clip-path="url(#clip0_185_14304)">
+            <path d="M88.008 6.26283L77.1639 45.0635H74.6317L63.2679 6.65041V37.9623C63.3005 40.9961 64.8265 42.5458 67.8779 42.5458H69.0474V45.0635H54.5669V42.5458H55.3459C58.3979 42.5458 59.9566 40.9961 59.9566 37.9623V7.68332C59.9239 4.64886 58.3979 3.09918 55.3459 3.09918H54.5669V0.577042H68.9821L77.5538 31.635L86.2221 0.577042H100.573V3.16409H99.7936C96.7416 3.22837 95.2156 4.71314 95.183 7.7476V37.9623C95.2156 40.9961 96.7416 42.5458 99.7936 42.5458H100.573V45.0635H82.8782V42.5458H83.3979C86.4493 42.5458 88.008 40.9961 88.008 37.9623V6.26283Z" fill="#E20074"/>
+            <path d="M108.933 29.666C108.933 38.7044 111.011 43.2879 115.361 43.2879C119.712 43.2879 121.855 38.7044 121.855 29.666C121.855 20.6275 119.712 16.0434 115.361 16.0434C111.011 16.0434 108.933 20.6275 108.933 29.666ZM129.387 29.666C129.387 38.4461 124.517 45.9997 115.361 45.9997C106.206 45.9997 101.401 38.4461 101.401 29.666C101.401 20.8859 106.206 13.3323 115.361 13.3323C124.517 13.3323 129.387 20.8859 129.387 29.666Z" fill="#E20074"/>
+            <path d="M140.746 29.5369C140.746 33.7334 141.591 42.7719 147.435 42.7719C152.954 42.7719 153.603 33.7977 153.603 29.5369C153.603 25.276 153.149 16.3018 147.629 16.3018C141.785 16.3018 140.746 25.3403 140.746 29.5369ZM134.643 6.32722C134.61 4.00301 133.733 3.09929 131.396 3.09929H130.519V0.577156H141.299V16.657C143.084 14.397 145.487 13.2674 148.571 13.2674C156.817 13.2674 161.103 20.24 161.103 29.5369C161.103 38.8337 156.817 45.7414 148.571 45.7414C144.965 45.7968 141.509 44.3031 139.09 41.6422L136.851 45.0636H133.896C134.385 42.8037 134.635 40.4992 134.643 38.1877V6.32722Z" fill="#E20074"/>
+            <path d="M175.001 39.3178C175.034 41.642 175.91 42.5457 178.248 42.5457H179.254V45.0634H164.092V42.5457H165.099C167.436 42.5457 168.345 41.642 168.345 39.3178V20.0139C168.313 17.6897 167.436 16.786 165.099 16.786H164.417V14.2683H175.001V39.3178Z" fill="#E20074"/>
+            <path d="M175.326 4.13229C175.391 6.3483 173.639 8.19774 171.411 8.26329C171.341 8.2652 171.272 8.26584 171.202 8.26393C168.907 8.28111 167.032 6.44504 167.015 4.16347C166.998 1.88126 168.844 0.0171871 171.139 3.8147e-06C171.171 3.8147e-06 171.203 4.76837e-06 171.235 0.000640869C173.492 -0.00126839 175.324 1.81762 175.326 4.06228C175.326 4.08583 175.326 4.10874 175.326 4.13229Z" fill="#E20074"/>
+            <path d="M192.824 39.3178C192.856 41.642 193.733 42.5457 196.07 42.5457H197.077V45.0634H182.044V42.5457H182.921C185.259 42.5457 186.168 41.642 186.168 39.3178V6.32703C186.136 4.00346 185.259 3.0991 182.921 3.0991H182.304V0.576965H192.824V39.3178Z" fill="#E20074"/>
+            <path d="M217.76 26.9545C217.63 19.53 215.812 16.0437 212.435 16.0437C209.058 16.0437 207.078 19.8202 206.851 26.9545H217.76ZM206.786 29.7954C207.013 34.9275 207.24 42.9006 213.929 42.9006C218.311 42.9006 220.519 39.3176 222.078 35.7994L224.74 37.1875C222.208 42.2877 219.091 46 212.89 46C203.409 46 199.545 37.9295 199.545 29.6662C199.545 21.725 203.442 13.3319 212.305 13.3319C221.851 13.3319 224.805 22.4352 225 29.7954H206.786Z" fill="#E20074"/>
+            <path d="M28.6358 29.9379H37.5845V21.0407H28.6358V29.9379ZM0 0.577232V15.7024H2.68461V15.2576C2.68461 8.13982 6.71153 3.69124 14.3179 3.69124H14.7653V35.721C14.7653 40.1696 12.9756 41.9497 8.50126 41.9497H7.15896V45.0637H30.4256V41.9497H29.0833C24.6089 41.9497 22.8192 40.1696 22.8192 35.721V3.69124H23.2666C30.873 3.69124 34.8999 8.13982 34.8999 15.2576V15.7024H37.5845V0.577232H0ZM8.94869 29.9379H0V21.0407H8.94869V29.9379Z" fill="#E20074"/>
+        </g>
+        <defs>
+            <clipPath id="clip0_185_14304">
+                <rect width="225" height="46" fill="white"/>
+            </clipPath>
+        </defs>
+    </svg>
+</div>
+
+<div id="tmobile-session-selection" style="display: flex; flex-direction: column; align-items: center;">
+    <div id="tmobile-not-available">
+        <div id="tmobile-not-available-warning-box" style="display: flex; max-width: 343px; align-items: flex-start; border-radius: 10px; border-top: 1px solid #FF4B4B; border-right: 1px solid #FF4B4B; border-bottom: 1px solid #FF4B4B; background: rgba(0, 0, 0, 0.25);">
+            <div style="width: 8px; flex-shrink: 0; align-self: stretch; background: #FF4B4B; border-radius: 10px 0 0 10px;"></div>
+            <div style="display: flex; padding: 16px; gap: 16px; align-items: flex-start; flex: 1;">
+                <div style="display: flex; padding-top: 6px; flex-direction: column; align-items: flex-start;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" style="width: 20px; height: 20px;">
+                    <g clip-path="url(#clip0_204_129)">
+                        <path d="M19.7501 16L11.5834 2.16666C11.2501 1.58333 10.6667 1.25 10.0001 1.25C9.33339 1.16666 8.66673 1.58333 8.41673 2.16666L0.25006 16C-0.24994 16.9167 0.0833934 18 0.916727 18.5C1.16673 18.6667 1.50006 18.75 1.83339 18.75H18.1667C19.1667 18.75 20.0001 17.9167 20.0001 16.9167C20.0001 16.5833 19.9167 16.3333 19.7501 16ZM10.0001 16.25C9.50006 16.25 9.08339 15.8333 9.08339 15.3333C9.08339 14.8333 9.50006 14.4167 10.0001 14.4167C10.5001 14.4167 10.9167 14.8333 10.9167 15.3333C10.9167 15.8333 10.5001 16.25 10.0001 16.25ZM10.6667 12.4167C10.6667 12.8333 10.5001 13.1667 10.0001 13.1667C9.41673 13.1667 9.33339 12.8333 9.33339 12.4167L9.08339 5.83333C9.08339 5.41666 9.50006 5 10.0001 5C10.5001 5 10.9167 5.41666 10.9167 5.83333L10.6667 12.4167Z" fill="#FF4B4B"/>
+                    </g>
+                    <defs>
+                        <clipPath id="clip0_204_129">
+                            <rect width="20" height="20" fill="white"/>
+                        </clipPath>
+                    </defs>
+                </svg>
+            </div>
+            <div id="tmobile-not-available-text-box" style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
+                <span id="tmobile-not-available-heading" style="max-width: 768px; align-self: stretch; color: #FFF; font-family: 'NeuePlakTextforUnited-SmBd', sans-serif; font-size: 20px; font-style: normal; font-weight: 600; line-height: 32px; margin: 0;">T-Mobile inflight connectivity is not available on this flight</span>
+                <span id="tmobile-not-available-subtext" style="max-width: 768px; align-self: stretch; color: #FFF; font-family: 'NeuePlakTextforUnited-Rg', sans-serif; font-size: 16px; font-style: normal; font-weight: 400; line-height: 24px; margin: 0;">You can still activate free messaging or purchase a Wi-Fi session.</span>
+            </div>
+            </div>
+        </div>
+        <div style="display: flex; max-width: 343px; flex-direction: column; align-items: center; gap: 8px; margin-top: 24px;">
+            <a href="/login/freeproduct"
+                class="T-MO-button T-MO-buttonText text-center btn btn-primary tmobile-submission-btn"
+                data-owp-analytics-on='click' 
+                id="tmobile-not-available-button-messaging"
+                style="display: flex; height: 52px; flex-direction: column; align-items: center; justify-content: center; align-self: stretch; border-radius: 30px; background: #276EF1; text-decoration: none; color: white;">
+                Activate free messaging
+            </a>
+            <a href="/login/products"
+                class="T-MO-button T-MO-buttonText text-center btn btn-secondary tmobile-submission-btn mx-0"
+                id="tmobile-not-available-button-wifi"
+                style="display: flex; height: 52px; flex-direction: column; align-items: center; justify-content: center; align-self: stretch; border-radius: 30px; border: 2px solid #FFF; background: rgba(0, 0, 0, 0.05); width: 100%;">
+                Purchase Wi-Fi
+            </a>
+        </div>
+    </div>
+</div>
+<div id="currentPage-TMobile"></div>
+
+    </div>
+    <div id="session-timeout-modal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header pb-0">
+                <h5 class="modal-title font-weight-bold">Page time-out</h5>
+            </div>
+            <div class="modal-body">
+                <p>We're sorry, your page has timed out. Please return to homepage to continue.</p>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <a class="a-button" href="https://www.unitedwifi.com/portal/l/index">
+                    <button type="button" class="btn btn-primary" id="return-home">Return to homepage</button>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" nonce="ORpuLcZB1JkgbojV6JiVOqcfX090QCyfp5ewv5bh2uc=">
+    $(document).ready(function () {
+        $('form').submit(function (event) {
+            let submitBtn = document.getElementById("return-home");
+            submitBtn.setAttribute('disabled', 'disabled');
+        });
+    });
+
+    window.setTimeout(function() {
+        $("#session-timeout-modal").modal({
+         backdrop: 'static',
+         show: true,
+         keyboard: false
+        })
+    }, 900000);
+</script>
+<script type="text/javascript" src="/js/polyfills.js"></script>
+<script type="text/javascript" src="/js/runtime.js"></script>
+<script type="text/javascript" src="/js/main.js"></script>
+</body>
+
+
+</html>

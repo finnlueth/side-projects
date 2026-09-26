@@ -1,0 +1,174 @@
+<html>
+  <head>
+    <title>Welcome to United Wi-Fi</title>
+  </head>
+  <body bgcolor="#ffffff">
+      <form id='the-form'
+            method='post'
+            enctype='multipart/form-data'
+            action='https://wifigroundportal.united.com/login/products'>
+          <input type='hidden' name='tailNumber' value='N000XX'>
+          <input type='hidden' name='vendor' value='Panasonic'>
+          <input type='hidden' name='deviceId' value='00:00:00:00:00:00'>
+          <input type='hidden' name='FlightNumber' value='000'>
+          <input type='hidden' name='Origin' value='BBB'>
+          <input type='hidden' name='Destination' value='AAA'>
+          <input type='hidden' name='DeviceCAS' id='DeviceCAS'>
+          <input type='hidden' name='Version' id='Version'>
+          <input type='hidden' name='correlationId' id='CorrelationId'>
+          <p id="the-button">
+              <input type="submit" style="visibility: hidden">
+          </p>
+      </form>      
+      <script type="text/javascript">
+        window.onload = function() {
+          document.getElementById("DeviceCAS").value = window.DeviceCAS;
+          document.getElementById("Version").value = window.Version;
+          document.getElementById("CorrelationId").value = createGuid();
+          document.getElementById("the-form").submit();
+          };
+          function createGuid()
+          {
+              var dt = new Date().getTime();
+              var guid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+              var r = (dt + Math.random()*16)%16 | 0;
+              dt = Math.floor(dt/16);
+              return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+            });
+            return guid;
+          }
+      </script>
+
+  </body>
+</html>
+
+</div>
+</div>
+
+<script src="../assets/js/v1/main-e81646ee77.pac.js"></script>
+<script type="text/javascript">
+	angular.module("entities").value("allSessionData", {
+	    "flightOffersInternetService": true,
+	    "internetConnectionIsAvailable": true,
+	    "isPortalInitialized":true,
+	    "devicePlatform" : "Other",
+	    "host" : "www.unitedwifi.com",
+		"deviceCAS" : "7",
+		"version" : "3.7.0",
+	    "isSubscriptionAvailable": true,
+	    "IsLoggedIn": true,
+	    "internet": {
+	      "accessType": "FULL",
+	      "tier": "",
+	      "tierDescription": "Wi-Fi",
+	      "fulfilmentState": "ACTIVE",
+	      "orderState": "ACTIVE",
+	      "timeRemaining": 0
+	    }
+	    ,    
+	    "flifo": {
+	        "originAirportCode": "BBB",
+	        "originCity": "Origin City (BBB)",
+	        "originState": "",
+	        "destinationAirportCode": "AAA",
+	        "destinationCity": "Destination City (AAA)",
+	        "destinationState": "",
+	        "scheduledDepartureTimeLocal": "01 Jan 2026 1:00 PM",
+	        "scheduledArrivalTimeLocal": "01 Jan 2026 1:00 PM",
+	        "estimatedDepartureTimeLocal": "01 Jan 2026 1:00 PM",
+	        "estimatedArrivalTimeLocal": "01 Jan 2026 1:00 PM",
+	        "actualDepartureTimeLocal": "01 Jan 2026 1:00 PM",
+	        "actualArrivalTimeLocal": "01 Jan 0001 12:00 AM",
+	        "flightStatus": "In Flight - Estimated to Arrive 1 Minute Early",
+	        "isFake": false,
+	        "flightNumber": "000",
+        	"flightGuid": "00000000-0000-0000-0000-000000000000",
+	        "timeRemainingToDestination": 569,
+	        "flightDurationMinutes" : 671,
+	        "flightMapPath": "/portal/images/map/TabletLandscape.png?1790029512",
+	        "scheduledDepartureTime": "1:55 p.m.",
+	        "actualDepartureTime": "1:53 p.m.",
+	        "scheduledArrivalTime": "10:05 a.m.",
+	        "estimatedArrivalTime": "10:04 a.m.",
+	        "departureGate": "X1",
+	        "arrivalGate": "HOLD",
+	        "departureTerminal": "International Terminal",
+	        "arrivalTerminal": "",
+	        "departureConcourse": " Concourse G",
+	        "arrivalConcourse": "",
+	        "aircraftModel": "Boeing 777-200ER",
+	        "noseNumber": "0000",
+	        "equipmentCode": "77U",
+	        "airSpeedMPH": "24",
+	        "airSpeedKPH": "39",
+	        "windDirection": "SSW",
+	        "groundSpeedMPH": "578",
+	        "groundSpeedKPH": "930",
+	        "airTemperatureF": "-54",
+	        "airTemperatureC": "-48",
+	        "altitudeFt": "34000",
+	        "altitudeMeters": "10363"
+	    }
+	    ,
+	    "weather": {
+	        "currently": {
+	            "day": "Tue",
+	            "code": "33",
+	            "currtempf": 46,
+	            "currtempc": 8,
+	            "lowtempf": 46,
+	            "hightempf": 46,
+	            "lowtempc": 8,
+	            "hightempc": 8,
+	            "text": "Fair"
+	        },
+	        "forecast": [
+	            {
+	                "day": "Wed",
+	                "code": 34,
+	                "lowtempf": 43,
+	            	"hightempf": 66,
+	            	"lowtempc": 6,
+	            	"hightempc": 19,
+	                "text": "Mostly Sunny"
+	            },
+	            {
+	                "day": "Thu",
+	                "code": 30,
+	                "lowtempf": 40,
+	            	"hightempf": 63,
+	            	"lowtempc": 4,
+	            	"hightempc": 17,
+	                "text": "AM Clouds/PM Sun"
+	            },
+	            {
+	                "day": "Fri",
+	                "code": 30,
+	                "lowtempf": 39,
+	            	"hightempf": 65,
+	            	"lowtempc": 4,
+	            	"hightempc": 19,
+	                "text": "Partly Cloudy"
+	            },
+	            {
+	                "day": "Sat",
+	                "code": 34,
+	                "lowtempf": 42,
+	            	"hightempf": 73,
+	            	"lowtempc": 5,
+	            	"hightempc": 23,
+	                "text": "Mostly Sunny"
+	            },
+	        "lastitem"
+	        ]
+	    }
+	});                         
+		window.DeviceCAS = '7'
+		window.Version = '3.7.0'
+</script>
+<script>
+	var vendor = 'PAC'
+</script>
+</body>
+</html>
+<!--0.34221291542053--><!--3.8.0-->

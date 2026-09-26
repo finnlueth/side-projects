@@ -1,0 +1,142 @@
+{
+  "isPortalInitialized": true,
+  "flightOffersInternetService": true,
+  "internetConnectionIsAvailable": true,
+  "isPDEServiceAvailable": true,
+  "devicePlatform": "Other",
+  "host": "www.unitedwifi.com",
+  "IsLoggedIn": true,
+  "isSubscriptionAvailable": true,
+  "VendorCode": "PAC",
+  "VendorName": "Panasonic",
+  "CoverageMessage": "",
+  "ShowCoverageArea": false,
+  "PurchaseActive": false,
+  "internet": {
+    "accessType": "FULL",
+    "tier": "",
+    "tierDescription": "Wi-Fi",
+    "fulfilmentState": "ACTIVE",
+    "orderState": "ACTIVE",
+    "timeRemaining": 0
+  },
+  "flifo": {
+    "actualArrivalTimeLocal": "01 Jan 0001 12:00 AM",
+    "actualDepartureTime": "1:00 p.m.",
+    "actualDepartureTimeLocal": "01 Jan 2026 1:00 PM",
+    "airSpeedKPH": "44",
+    "airSpeedMPH": "28",
+    "airTemperatureC": "-48",
+    "airTemperatureF": "-54",
+    "aircraftModel": "Boeing 777-200ER",
+    "altitudeFt": "34000",
+    "altitudeMeters": "10363",
+    "arrivalConcourse": "",
+    "arrivalGate": "HOLD",
+    "arrivalTerminal": "",
+    "departureConcourse": " Concourse X",
+    "departureGate": "X1",
+    "departureTerminal": "Terminal",
+    "destinationAirportCode": "AAA",
+    "destinationCity": "Destination City (AAA)",
+    "destinationState": "",
+    "equipmentCode": "77U",
+    "estimatedArrivalTime": "9:00 a.m.",
+    "estimatedArrivalTimeLocal": "02 Jan 2026 9:00 AM",
+    "estimatedDepartureTimeLocal": "01 Jan 2026 1:00 PM",
+    "flightDurationMinutes": 671,
+    "flightGuid": "00000000-0000-0000-0000-000000000000",
+    "flightMapPath": "/portal/images/map/TabletLandscape.png?1790029754",
+    "flightNumber": "000",
+    "flightStatus": "In Flight - Estimated to Arrive 1 Minute Early",
+    "groundSpeedKPH": "935",
+    "groundSpeedMPH": "581",
+    "isFake": false,
+    "noseNumber": "0000",
+    "originAirportCode": "BBB",
+    "originCity": "Origin City (BBB)",
+    "originState": "",
+    "scheduledArrivalTime": "9:00 a.m.",
+    "scheduledArrivalTimeLocal": "02 Jan 2026 9:00 AM",
+    "scheduledDepartureTime": "1:00 p.m.",
+    "scheduledDepartureTimeLocal": "01 Jan 2026 1:00 PM",
+    "tailNumber": "N000XX",
+    "timeRemainingToDestination": 565,
+    "windDirection": "SW"
+  },
+  "weather": {
+    "currently": {
+      "code": "31",
+      "currtempc": 8,
+      "currtempf": 46,
+      "day": "Tue",
+      "hightempc": 8,
+      "hightempf": 46,
+      "lowtempc": 8,
+      "lowtempf": 46,
+      "text": "Clear"
+    },
+    "forecast": [
+      {
+        "code": 34,
+        "day": "Wed",
+        "hightempc": 19,
+        "hightempf": 66,
+        "lowtempc": 6,
+        "lowtempf": 43,
+        "text": "Mostly Sunny"
+      },
+      {
+        "code": 30,
+        "day": "Thu",
+        "hightempc": 17,
+        "hightempf": 63,
+        "lowtempc": 4,
+        "lowtempf": 40,
+        "text": "AM Clouds/PM Sun"
+      },
+      {
+        "code": 30,
+        "day": "Fri",
+        "hightempc": 19,
+        "hightempf": 65,
+        "lowtempc": 4,
+        "lowtempf": 39,
+        "text": "Partly Cloudy"
+      },
+      {
+        "code": 34,
+        "day": "Sat",
+        "hightempc": 23,
+        "hightempf": 73,
+        "lowtempc": 5,
+        "lowtempf": 42,
+        "text": "Mostly Sunny"
+      },
+      "lastitem"
+    ]
+  },
+  "deviceCAS": 9,
+  "version": "3.7.0",
+  "metaData": {
+    "tags": [
+      "switchable",
+      "thisisanupgradeproduct",
+      "upgradeable"
+    ],
+    "properties": {
+      "Channel": "Portal",
+      "Content-Type": "Protobuf",
+      "FramedIp": "10.0.0.1",
+      "IpAddress": "172.16.0.1",
+      "IsDeviceHasActiveTimedProductOfSameAccessPlan": "false",
+      "Mac": "00:00:00:00:00:00",
+      "MileagePlusId": "XXX00000",
+      "TransactionId": "00000000-0000-0000-0000-000000000000",
+      "UserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "vendor": "PAC",
+      "vendorName": "Panasonic",
+      "version": "missing"
+    }
+  }
+}
