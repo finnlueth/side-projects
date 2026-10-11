@@ -40,20 +40,36 @@ final class WindowState: ObservableObject {
     @Published var anchor: Anchor {
         didSet { UserDefaults.standard.set(anchor.rawValue, forKey: "anchor") }
     }
+    @Published var alwaysShowControls: Bool {
+        didSet { UserDefaults.standard.set(alwaysShowControls, forKey: "alwaysShowControls") }
+    }
+    @Published var showCycleDots: Bool {
+        didSet { UserDefaults.standard.set(showCycleDots, forKey: "showCycleDots") }
+    }
+    @Published var showDockBadge: Bool {
+        didSet { UserDefaults.standard.set(showDockBadge, forKey: "showDockBadge") }
+    }
+    @Published var showInDock: Bool {
+        didSet { UserDefaults.standard.set(showInDock, forKey: "showInDock") }
+    }
     /// Measured width of the pill, needed to keep it visually still when the anchor (and so its alignment) changes.
     @Published var pillWidth: CGFloat = 0
 
     init() {
         isOverlay = UserDefaults.standard.object(forKey: "isOverlay") as? Bool ?? true
         anchor = UserDefaults.standard.string(forKey: "anchor").flatMap(Anchor.init) ?? Anchor(horizontal: .right, vertical: .top)
+        alwaysShowControls = UserDefaults.standard.object(forKey: "alwaysShowControls") as? Bool ?? false
+        showCycleDots = UserDefaults.standard.object(forKey: "showCycleDots") as? Bool ?? true
+        showDockBadge = UserDefaults.standard.object(forKey: "showDockBadge") as? Bool ?? true
+        showInDock = UserDefaults.standard.object(forKey: "showInDock") as? Bool ?? true
     }
 }
 
 enum Layout {
     /// Transparent margin around the pill so its shadow isn't clipped by the window edge.
     static let shadowPadding: CGFloat = 20
-    /// Wide enough for the expanded pill.
-    static let windowContentWidth: CGFloat = 250
+    /// Wide enough for the expanded pill, including the maximum of 8 cycle dots.
+    static let windowContentWidth: CGFloat = 330
 }
 
 private struct PillWidthKey: PreferenceKey {
@@ -81,6 +97,8 @@ struct ContentView: View {
             .background(spaceShortcut)
     }
 
+    private var showsControls: Bool { hover.isHovering || windowState.alwaysShowControls }
+
     private var pill: some View {
         HStack(spacing: 8) {
             progressRing
@@ -90,23 +108,44 @@ struct ContentView: View {
                 .foregroundStyle(timer.isRunning ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                 .contentTransition(.numericText(countsDown: true))
                 .animation(.snappy, value: timer.formattedRemaining)
-            if hover.isHovering {
+            if showsControls {
+                if windowState.showCycleDots {
+                    cycleDots
+                        .transition(.opacity)
+                }
                 controls
                     .transition(.opacity.combined(with: .scale(scale: 0.8, anchor: .leading)))
             }
         }
         .padding(.leading, 11)
-        .padding(.trailing, hover.isHovering ? 6 : 13)
+        .padding(.trailing, showsControls ? 6 : 13)
         .frame(height: 34)
+        // Controls are laid out at their final position while the capsule's width animates;
+        // clip so they never show outside the glass mid-expand/collapse.
+        .clipShape(.capsule)
         .glassEffect(.regular.tint(tint.opacity(0.08)), in: .capsule)
         .shadow(color: .black.opacity(0.15), radius: 6, y: 2)
         .background(GeometryReader { Color.clear.preference(key: PillWidthKey.self, value: $0.size.width) })
         .onPreferenceChange(PillWidthKey.self) { [windowState] in windowState.pillWidth = $0 }
         .onHover { [hover] in hover.isHovering = $0 }
         .contextMenu { settingsMenu }
-        .animation(.smooth(duration: 0.25), value: hover.isHovering)
+        .animation(.smooth(duration: 0.25), value: showsControls)
         .animation(.smooth, value: timer.phase)
-        .help("\(timer.phase.title) · session \(min(timer.completedSessions + 1, PomodoroTimer.sessionsPerCycle)) of \(PomodoroTimer.sessionsPerCycle)")
+        .help("\(timer.phase.title) · session \(min(timer.completedSessions + 1, timer.sessionsPerCycle)) of \(timer.sessionsPerCycle)")
+    }
+
+    /// One dot per focus session in the cycle: done, current (while focusing), upcoming.
+    private var cycleDots: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<timer.sessionsPerCycle, id: \.self) { i in
+                let isDone = i < timer.completedSessions
+                let isCurrent = i == timer.completedSessions && timer.phase == .focus
+                Circle()
+                    .fill(isDone ? AnyShapeStyle(tint) : isCurrent ? AnyShapeStyle(tint.opacity(0.45)) : AnyShapeStyle(.quaternary))
+                    .frame(width: 5, height: 5)
+            }
+        }
+        .padding(.leading, 2)
     }
 
     private var progressRing: some View {
@@ -132,6 +171,7 @@ struct ContentView: View {
                        color: windowState.isOverlay ? tint : nil) {
                 windowState.isOverlay.toggle()
             }
+            iconButton("gearshape.fill", help: "Settings", action: AppDelegate.showSettings)
         }
     }
 
@@ -156,17 +196,11 @@ struct ContentView: View {
     }
 
     @ViewBuilder private var settingsMenu: some View {
-        Picker("Focus", selection: $timer.focusMinutes) {
-            ForEach([15, 20, 25, 30, 45, 50, 60], id: \.self) { Text("\($0) min").tag($0) }
-        }
-        Picker("Short Break", selection: $timer.shortBreakMinutes) {
-            ForEach([3, 5, 10], id: \.self) { Text("\($0) min").tag($0) }
-        }
-        Picker("Long Break", selection: $timer.longBreakMinutes) {
-            ForEach([10, 15, 20, 30], id: \.self) { Text("\($0) min").tag($0) }
-        }
+        Button("Settings…", action: AppDelegate.showSettings)
+            .keyboardShortcut(",")
         Divider()
         Toggle("Float Above Other Windows", isOn: $windowState.isOverlay)
+        Toggle("Play Sounds", isOn: $timer.soundsEnabled)
         Divider()
         Button("Quit Pomodoro") { NSApp.terminate(nil) }
     }

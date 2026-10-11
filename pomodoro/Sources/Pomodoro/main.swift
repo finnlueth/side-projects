@@ -64,6 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Tighter against the menu bar, which already reads as a boundary.
     private let topMargin: CGFloat = 5
     private var window: GlassWindow!
+    private var settingsWindow: NSWindow?
     private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -96,9 +97,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .store(in: &cancellables)
 
         // Show the countdown on the Dock icon so it's visible even when the window is covered.
-        timer.objectWillChange
+        timer.objectWillChange.merge(with: windowState.objectWillChange)
             .receive(on: RunLoop.main)
             .sink { [weak self] in self?.updateDockBadge() }
+            .store(in: &cancellables)
+
+        windowState.$showInDock
+            .removeDuplicates()
+            .dropFirst()  // the initial policy is set before launch
+            .sink { [weak self] in self?.applyDockPolicy($0) }
             .store(in: &cancellables)
 
         buildMainMenu()
@@ -111,6 +118,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
+    // MARK: Settings
+
+    /// Entry point for SwiftUI buttons and menu items.
+    static func showSettings() {
+        (NSApp.delegate as? AppDelegate)?.openSettings()
+    }
+
+    @objc private func openSettings() {
+        if settingsWindow == nil {
+            let controller = NSHostingController(rootView: SettingsView(timer: timer, windowState: windowState))
+            controller.sizingOptions = [.preferredContentSize]
+            let settings = NSWindow(contentViewController: controller)
+            settings.title = "Pomodoro Settings"
+            settings.styleMask = [.titled, .closable]
+            settings.isReleasedWhenClosed = false
+            settings.center()
+            settingsWindow = settings
+        }
+        NSApp.activate()
+        settingsWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    private func applyDockPolicy(_ showInDock: Bool) {
+        NSApp.setActivationPolicy(showInDock ? .regular : .accessory)
+        // Changing the policy deactivates the app; keep the settings window in front.
+        DispatchQueue.main.async { [weak self] in
+            NSApp.activate()
+            self?.settingsWindow?.makeKeyAndOrderFront(nil)
+        }
+    }
+
     private func applyOverlay(_ overlay: Bool) {
         window.level = overlay ? .floating : .normal
         window.collectionBehavior = overlay
@@ -121,8 +159,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func updateDockBadge() {
         // objectWillChange fires before the new value lands, so read on the next runloop turn.
-        DispatchQueue.main.async { [timer] in
-            NSApp.dockTile.badgeLabel = timer.isRunning ? timer.formattedRemaining : nil
+        DispatchQueue.main.async { [timer, self] in
+            NSApp.dockTile.badgeLabel = timer.isRunning && self.windowState.showDockBadge ? timer.formattedRemaining : nil
         }
     }
 
@@ -200,10 +238,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let appItem = NSMenuItem()
         main.addItem(appItem)
         let appMenu = NSMenu()
+        let settingsItem = appMenu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
+        settingsItem.target = self
+        appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Hide Pomodoro", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Quit Pomodoro", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appItem.submenu = appMenu
+
+        // ⌘W closes the settings window (the borderless pill has no close button, so it's unaffected).
+        let windowItem = NSMenuItem()
+        main.addItem(windowItem)
+        let windowMenu = NSMenu(title: "Window")
+        windowMenu.addItem(withTitle: "Close", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        windowItem.submenu = windowMenu
         NSApp.mainMenu = main
     }
 }
@@ -211,5 +259,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
-app.setActivationPolicy(.regular)
+app.setActivationPolicy(UserDefaults.standard.object(forKey: "showInDock") as? Bool ?? true ? .regular : .accessory)
 app.run()
